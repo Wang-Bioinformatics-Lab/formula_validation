@@ -241,6 +241,13 @@ class Formula:
       IncorrectFormula: if the number of appearances is <=0
       NotFoundElement: if the dict contains elements that not a chemical element
     """
+    # First, we assume that formula is simple and it is not necessary to process it from the web server. 
+    try:
+      simple_formula = Formula.formula_from_str_hill(mf_hill, adduct)
+      return simple_formula
+    except exception as e:
+      # If the formula could not be processed directly, then it is processed by chemcalc
+      pass
 
     params = {'mf': formula_str,
       'isotopomers': 'jcamp,xy'
@@ -256,8 +263,6 @@ class Formula:
     mf_hill = data['mf']
     return Formula.formula_from_str_hill(mf_hill, adduct)
     
-    # __connection_to_chemcalc_ws = None
-    # __ccurl
     
   def formula_from_smiles(smiles: str, adduct: str) -> 'Formula':
     """
