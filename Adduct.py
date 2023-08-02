@@ -228,10 +228,10 @@ def main():
   try:
     adduct_str1 = '[M-2H+K]-'
     adduct_1 =Adduct(adduct_str1)
-    if adduct_1.get_adduct_charge()==1 and adduct_1.get_adduct_charge_type() == '-' and adduct_1.get_multimer()==1 and math.isclose(adduct_1.get_adduct_mass(),-36.94806,abs_tol=0.001):
+    if adduct_1.get_adduct_charge()==1 and adduct_1.get_adduct_charge_type() == '-' and adduct_1.get_multimer()==1 and math.isclose(adduct_1.get_adduct_mass(),36.94806,abs_tol=0.001):
       print("Test PASSED. The function to calculate the absolute values from ppms is correct.")
     else:
-      print("Test FAILED. Check the function to calculate absolute values from ppms. Check adduct " + str(adduct_1) + " coming from: " + adduct_str1)
+      print("Test FAILED. Check the function to calculate absolute values from ppms. Check adduct " + str(adduct_1) + " coming from: " + adduct_str1 + " adduct MASS: " + str(adduct_1.get_adduct_mass()))
   except IncorrectAdduct as ia:
      print("Test FAILED. Check the function to calculate absolute values from ppms. Check adduct " + str(adduct_1) + " coming from: " + adduct_str1)
      print(str(ia))
