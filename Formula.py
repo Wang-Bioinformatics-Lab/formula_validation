@@ -186,7 +186,7 @@ class Formula:
         if appearances == 0:
           elements_to_remove.add(element)
         elif appearances < 0:
-          raise IncorrectFormula("The addition of these two formulas contain a negative number of {element}")  
+          raise IncorrectFormula("The subtraction of these two formulas contain a negative number of {element}")  
       for element_to_remove in elements_to_remove:
         del new_formula_dict[element_to_remove]
       return Formula(new_formula_dict, self.__adduct)
