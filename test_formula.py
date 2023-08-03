@@ -207,5 +207,26 @@ class TestFormula(unittest.TestCase):
     expected_value = False
     self.assertEqual(current_value, expected_value)
 
+
+  def test_percentage_intensity_fragments_explained_by_formula(self):
+    
+    formula_1 = 'C9H9O2S2'
+    adduct = '[M+H]+' 
+    import pickle
+    spectra_1 = pickle.load(open("example_spectra_for_Alberto.pkl", 'rb'))
+    mzs = spectra_1['m/z array']
+    intensities = spectra_1['intensity array']
+    fragments_mz_intensities = dict(zip(mzs, intensities))
+    metadata = pickle.load(open("example_metadata_for_Alberto.pkl", 'rb'))
+    smiles = metadata[1]["Smiles"]
+    formula = Formula.formula_from_smiles(smiles, adduct)
+
+    
+    current_value = formula.percentage_intensity_fragments_explained_by_formula(fragments_mz_intensities=fragments_mz_intensities,ppm=50)
+    expected_value = 0.886
+    
+    self.assertAlmostEqual(current_value, expected_value, delta=1e-2)
+
+
 if __name__ == "__main__":
   unittest.main()
