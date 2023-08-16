@@ -29,6 +29,7 @@ __author__      = "Alberto Gil de la Fuente"
 __copyright__   = "GPL License version 3"
 from IncorrectAdduct import IncorrectAdduct
 from Formula import Formula
+from formula_utils import atom_dict_from_str
 import re
 
 class Adduct:
@@ -89,7 +90,6 @@ class Adduct:
   def __hash__(self):
     return hash(self.__multimer, self.__formula_plus, self.__formula_minus, self.__charge, self.__charge_type)
 
-
   def __calculate_adduct_formula_to_add_and_subtract(self, adduct_formula: str) -> float:
     """
       Args:
@@ -109,8 +109,7 @@ class Adduct:
     final_adduct_elements_dict = {}
     for symbol, number_subformulas, subformula_str in formulas:
       number_subformulas = int(number_subformulas) if number_subformulas else 1
-      subformula=Formula.formula_from_str(subformula_str, 'None')
-      dict_subformula=subformula.get_elements()
+      dict_subformula=atom_dict_from_str(subformula_str)
       
       if symbol == '+':
         for element,count in dict_subformula.items():
@@ -160,8 +159,6 @@ class Adduct:
   def get_adduct_charge_type(self)-> str:
     return self.__charge_type
 
-      
-    
 
 def main():
   import math

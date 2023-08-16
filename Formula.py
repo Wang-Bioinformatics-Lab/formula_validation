@@ -37,12 +37,13 @@ import json
 from Element import Element_type, element_weights
 from IncorrectFormula import IncorrectFormula
 from NotFoundElement import NotFoundElement
+from formula_utils import atom_dict_from_str
 
 
 class Formula:
   __electron_weight=0.00054858
 
-  __connection_to_chemcalc_ws = urllib3.PoolManager()
+  __connection_to_chemcalc_ws = urllib3.PoolManager(num_pools=1)
   __ccurl = 'https://www.chemcalc.org/chemcalc/mf' 
   
 
@@ -207,61 +208,42 @@ class Formula:
       return Formula(new_formula_dict, self.__adduct)
     else:
         raise IncorrectFormula("other should be a formula and is a " + type(Formula))
-    
-
-  def formula_from_str_hill(formula_str: str, adduct: str) -> 'Formula':
-    """
-    Args:
-      formula_str (str): represents a molecular formula as a string of type [Element_type][NumberOfOccurences]: C4H5N6Na. It can contain parenthesis. 
-      adduct (str): adduct representing the adduct formed by the molecular formula expressed by the form '[M+C2H2O-H]-'
-    Returns:
-      Formula: a new instance of a formula with the elements specified in the string
-    Raises:
-      IncorrectFormula: if the number of appearances is <=0
-      NotFoundElement: if the dict contains elements that not a chemical element
-    """
-    import re
-    pattern = r'([A-Z][a-z]*)(\d*)'
-    elements = {}
-    
-    for element, appearances in re.findall(pattern, formula_str):
-      appearances = int(appearances) if appearances else 1
-      elements[element] = elements.get(element, 0) + appearances
       
-    return Formula(elements, adduct)
+    return elements
   
-  def formula_from_str(formula_str: str, adduct: str) -> 'Formula':
-    """
-    Args:
-      formula_str (str): represents a molecular formula as a string of type [Element_type][NumberOfOccurences]: C4H5N6Na. It can contain parenthesis. 
-      adduct (str): adduct representing the adduct formed by the molecular formula expressed by the form '[M+C2H2O-H]-'
-    Returns:
-      Formula: a new instance of a formula with the elements specified in the string
-    Raises:
-      IncorrectFormula: if the number of appearances is <=0
-      NotFoundElement: if the dict contains elements that not a chemical element
-    """
-    # First, we assume that formula is simple and it is not necessary to process it from the web server. 
-    try:
-      simple_formula = Formula.formula_from_str_hill(mf_hill, adduct)
-      return simple_formula
-    except exception as e:
-      # If the formula could not be processed directly, then it is processed by chemcalc
-      pass
+  # def formula_from_str(formula_str: str, adduct: str) -> 'Formula':
+  #   """
+  #   Args:
+  #     formula_str (str): represents a molecular formula as a string of type [Element_type][NumberOfOccurences]: C4H5N6Na. It can contain parenthesis. 
+  #     adduct (str): adduct representing the adduct formed by the molecular formula expressed by the form '[M+C2H2O-H]-'
+  #   Returns:
+  #     Formula: a new instance of a formula with the elements specified in the string
+  #   Raises:
+  #     IncorrectFormula: if the number of appearances is <=0
+  #     NotFoundElement: if the dict contains elements that not a chemical element
+  #   """
+  #   # First, we assume that formula is simple and it is not necessary to process it from the web server. 
+  #   try:
+  #     simple_formula = Formula.formula_from_str_hill(formula_str, adduct)
+  #     return simple_formula
+  #   except Exception as e:
+  #     # If the formula could not be processed directly, then it is processed by rdkit, and if not, chemcalc
+  #     print("Failed to parse formula {}".format(formula_str))
+  #     raise NotImplementedError
 
-    params = {'mf': formula_str,
-      'isotopomers': 'jcamp,xy'
-    }
-    response = Formula.__connection_to_chemcalc_ws.request("GET",Formula.__ccurl, fields=params, retries = 3)
+  #   params = {'mf': formula_str,
+  #     'isotopomers': 'jcamp,xy'
+  #   }
+  #   response = Formula.__connection_to_chemcalc_ws.request("GET",Formula.__ccurl, fields=params, retries = 3)
 
-    # Read the output and convert it from JSON into a Python dictionary
-    if(response.status != 200):
-      raise IncorrectFormula("The formula " + formula_str + " was not parseable to a correct formula")
+  #   # Read the output and convert it from JSON into a Python dictionary
+  #   if(response.status != 200):
+  #     raise IncorrectFormula("The formula " + formula_str + " was not parseable to a correct formula")
     
-    data = response.json()
+  #   data = response.json()
     
-    mf_hill = data['mf']
-    return Formula.formula_from_str_hill(mf_hill, adduct)
+  #   mf_hill = data['mf']
+  #   return Formula.formula_from_str_hill(mf_hill, adduct)
     
     
   def formula_from_smiles(smiles: str, adduct: str) -> 'Formula':
@@ -276,38 +258,44 @@ class Formula:
     """
     from rdkit import Chem
     from rdkit.Chem.rdMolDescriptors import CalcMolFormula
+    
     if smiles =='' or smiles=='nan' or smiles == 'None' or smiles == None:
       raise IncorrectFormula(smiles)
-    elif smiles.startswith('InChI='):
-      return Formula.formula_from_inchi(smiles,adduct)
     
-    mol = Chem.MolFromSmiles(smiles)
+    if smiles.startswith('InChI='):
+      mol = Chem.inchi.MolFromInchi(smiles)
+    else:
+      mol = Chem.MolFromSmiles(smiles)
     if mol is None:
       raise IncorrectFormula(smiles)
-    formula = CalcMolFormula(mol)
-    return Formula.formula_from_str(formula, adduct)
     
     
-  def formula_from_inchi(inchi: str, adduct: str) -> 'Formula':
-    """
-    Args:
-      inchi (str): represents a molecular structure as a string. Example: InChI=1S/C45H73N5O10S3/c1-14-17-24(6)34(52)26(8)37-25(7)30(58-13)18-31-46-29(19-61-31)39-49-45(12,21-62-39)43-50-44(11,20-63-43)42(57)48-32(22(4)15-2)35(53)27(9)40(55)59-36(23(5)16-3)38(54)47-33(28(10)51)41(56)60-37/h19,22-28,30,32-37,51-53H,14-18,20-21H2,1-13H3,(H,47,54)(H,48,57)/t22-,23-,24+,25-,26-,27+,28+,30-,32-,33-,34-,35-,36-,37-,44+,45+/m0/s1
-      adduct (str): adduct representing the adduct formed by the molecular formula expressed by the form '[M+C2H2O-H]-'
-    Returns:
-      Formula: according to the structure
-    Raises:
-      IncorrectFormula: if the SMILES does not represent a structure
-    """
-    from rdkit import Chem
-    from rdkit.Chem.rdMolDescriptors import CalcMolFormula
-    if not inchi.startswith('InChI='):
-      raise IncorrectFormula(inchi)
+    formula = atom_dict_from_str(CalcMolFormula(mol))
+    
+    
+    return Formula(formula, adduct)
+    
+    
+  # def formula_from_inchi(inchi: str, adduct: str) -> 'Formula':
+  #   """
+  #   Args:
+  #     inchi (str): represents a molecular structure as a string. Example: InChI=1S/C45H73N5O10S3/c1-14-17-24(6)34(52)26(8)37-25(7)30(58-13)18-31-46-29(19-61-31)39-49-45(12,21-62-39)43-50-44(11,20-63-43)42(57)48-32(22(4)15-2)35(53)27(9)40(55)59-36(23(5)16-3)38(54)47-33(28(10)51)41(56)60-37/h19,22-28,30,32-37,51-53H,14-18,20-21H2,1-13H3,(H,47,54)(H,48,57)/t22-,23-,24+,25-,26-,27+,28+,30-,32-,33-,34-,35-,36-,37-,44+,45+/m0/s1
+  #     adduct (str): adduct representing the adduct formed by the molecular formula expressed by the form '[M+C2H2O-H]-'
+  #   Returns:
+  #     Formula: according to the structure
+  #   Raises:
+  #     IncorrectFormula: if the SMILES does not represent a structure
+  #   """
+  #   from rdkit import Chem
+  #   from rdkit.Chem.rdMolDescriptors import CalcMolFormula
+  #   if not inchi.startswith('InChI='):
+  #     raise IncorrectFormula(inchi)
   
-    mol = Chem.MolFromInchi(inchi)
-    if mol is None:
-      raise IncorrectFormula(inchi)
-    formula = CalcMolFormula(mol)
-    return Formula.formula_from_str(formula, adduct)
+  #   mol = Chem.MolFromInchi(inchi)
+  #   if mol is None:
+  #     raise IncorrectFormula(inchi)
+  #   formula = CalcMolFormula(mol)
+  #   return Formula.formula_from_str(formula, adduct)
       
   def get_elements(self) -> Dict['Element_type',int]:
     """
@@ -400,7 +388,7 @@ class Formula:
     Returns: the ppms between the monoisotopic mass of the formula taking into account the adduct and the experimental mass detected
     Raise: a exception if reference_monoisotopic_mass or ppm are not numbers
     """
-    print(self.get_monoisotopic_mass_with_adduct(), reference_monoisotopic_mass)
+    # print(self.get_monoisotopic_mass_with_adduct(), reference_monoisotopic_mass)
     return Formula.absolute_to_ppm(self.get_monoisotopic_mass_with_adduct(), reference_monoisotopic_mass)
 
   
@@ -426,7 +414,7 @@ class Formula:
     Raise: a exception if reference_monoisotopic_mass or ppm are not numbers
     """
     return (reference_monoisotopic_mass / 1000000.0) * ppm
-  
+
 
 def main():
   
@@ -481,38 +469,37 @@ def main():
 
 
 
-  print("=================================================================.")
-  print("Test Case 3A: Creating a formula from a string")
-  print("=================================================================.")
-  try:
-    my_formula_str = "H5C5N4ONaK"
-    adduct = '[M+C2H2O-H]-'
-    my_formula = Formula.formula_from_str(my_formula_str, adduct)
-    elements_expected = {Element_type.H: 5, Element_type.C: 5, Element_type.N: 4, Element_type.O: 1, Element_type.Na: 1, Element_type.K: 1}
-    if my_formula.get_elements() == elements_expected:
-      print("Test PASSED. The function to construct a formula representing a string has been implemented correctly.")
-    else:
-      print("Test FAILED. Check the constructor of formula from string")
-      print(my_formula)
-  except IncorrectFormula as incfor:
-    print("Test FAILED. Check the constructor of formula from a string")
+  # print("=================================================================.")
+  # print("Test Case 3A: Creating a formula from a string")
+  # print("=================================================================.")
+  # try:
+  #   my_formula_str = "H5C5N4ONaK"
+  #   adduct = '[M+C2H2O-H]-'
+  #   my_formula = Formula.formula_from_str(my_formula_str, adduct)
+  #   elements_expected = {Element_type.H: 5, Element_type.C: 5, Element_type.N: 4, Element_type.O: 1, Element_type.Na: 1, Element_type.K: 1}
+  #   if my_formula.get_elements() == elements_expected:
+  #     print("Test PASSED. The function to construct a formula representing a string has been implemented correctly.")
+  #   else:
+  #     print("Test FAILED. Check the constructor of formula from string")
+  #     print(my_formula)
+  # except IncorrectFormula as incfor:
+  #   print("Test FAILED. Check the constructor of formula from a string")
 
-  print("=================================================================.")
-  print("Test Case 3B: Creating a formula from a string with parenthesis")
-  print("=================================================================.")
-  try:
-    my_formula_str = "H5C5N4O(H2O)2NaK"
-    adduct = '[M+C2H2O-H]-'
-    my_formula = Formula.formula_from_str(my_formula_str, adduct)
-    elements_expected = {Element_type.H: 9, Element_type.C: 5, Element_type.N: 4, Element_type.O: 3, Element_type.Na: 1, Element_type.K: 1}
-    if my_formula.get_elements() == elements_expected:
-      print("Test PASSED. The function to construct a formula representing a string has been implemented correctly.")
-    else:
-      print("Test FAILED. Check the constructor of formula from string")
-      print(my_formula)
-  except IncorrectFormula as incfor:
-    print("Test FAILED. Check the constructor of formula from a string")
-
+  # print("=================================================================.")
+  # print("Test Case 3B: Creating a formula from a string with parenthesis")
+  # print("=================================================================.")
+  # try:
+  #   my_formula_str = "H5C5N4O(H2O)2NaK"
+  #   adduct = '[M+C2H2O-H]-'
+  #   my_formula = Formula.formula_from_str(my_formula_str, adduct)
+  #   elements_expected = {Element_type.H: 9, Element_type.C: 5, Element_type.N: 4, Element_type.O: 3, Element_type.Na: 1, Element_type.K: 1}
+  #   if my_formula.get_elements() == elements_expected:
+  #     print("Test PASSED. The function to construct a formula representing a string has been implemented correctly.")
+  #   else:
+  #     print("Test FAILED. Check the constructor of formula from string")
+  #     print(my_formula)
+  # except IncorrectFormula as incfor:
+  #   print("Test FAILED. Check the constructor of formula from a string")
   
   print("=================================================================.")
   print("Test Case 4: Creating a formula from a SMILES")
@@ -522,34 +509,33 @@ def main():
     smiles_2 = 'CCC[C@@H](C)[C@@H]([C@H](C)[C@@H]1[C@H]([C@H](Cc2nc(cs2)C3=N[C@](CS3)(C4=N[C@](CS4)(C(=O)N[C@H]([C@H]([C@H](C(=O)O[C@H](C(=O)N[C@H](C(=O)O1)[C@@H](C)O)[C@@H](C)CC)C)O)[C@@H](C)CC)C)C)OC)C)O'
     smiles_3 = 'CCCCCCC[C@@H](C/C=C/CCC(=O)NC/C(=C/Cl)/[C@@]12[C@@H](O1)[C@H](CCC2=O)O)OC'
     adduct = '[M+C2H2O-H]-'
-    my_formula = Formula.formula_from_smiles(smiles_1, adduct)
+    
     Formula.formula_from_smiles('C/C1=C\CCC2=C[C@@H](OC2=O)[C@H](C(C)C)CC[C@]3(C)[C@H](O3)CC1', '[M-H2O+H]+')
+    
+    my_formula_1 = Formula.formula_from_smiles(smiles_1, adduct)
     my_formula_2 = Formula.formula_from_smiles(smiles_2, adduct)
     my_formula_3 = Formula.formula_from_smiles(smiles_3, adduct)
     elements_expected_1 = {Element_type.H: 72, Element_type.C: 48, Element_type.N: 10, Element_type.O: 12}
     elements_expected_2 = {Element_type.H: 73, Element_type.C: 45, Element_type.N: 5, Element_type.O: 10, Element_type.S: 3}
     elements_expected_3 = {Element_type.H: 38, Element_type.C: 24, Element_type.N: 1, Element_type.O: 5, Element_type.Cl: 1}
-    if my_formula.get_elements() == elements_expected_1:
+    if my_formula_1.get_elements() == elements_expected_1:
       print("Test PASSED. The function to construct a formula by a SMILES has been implemented correctly.")
     else:
       print("Test FAILED. Check the constructor of formula from string: ")
-      print("EXPECTED" + my_formula)
-      print("ACTUAL" + my_formula.get_elements())
-      print(my_formula)
+      print("EXPECTED " + str(elements_expected_1))
+      print("ACTUAL " + str(my_formula_1.get_elements()))
     if my_formula_2.get_elements() == elements_expected_2:
       print("Test PASSED. The function to construct a formula by a SMILES has been implemented correctly.")
     else:
       print("Test FAILED. Check the constructor of formula from string: ")
-      print("EXPECTED" + my_formula)
-      print("ACTUAL" + my_formula.get_elements())
-      print(my_formula)
+      print("EXPECTED " + str(elements_expected_2))
+      print("ACTUAL " + str(my_formula_2.get_elements()))
     if my_formula_3.get_elements() == elements_expected_3:
       print("Test PASSED. The function to construct a formula by a SMILES has been implemented correctly.")
     else:
       print("Test FAILED. Check the constructor of formula from string: ")
-      print("EXPECTED" + my_formula)
-      print("ACTUAL" + my_formula.get_elements())
-      print(my_formula)
+      print("EXPECTED " + str(elements_expected_3))
+      print("ACTUAL " + str(my_formula_3.get_elements()))
   except IncorrectFormula as incfor:
     print("Test FAILED. Check the constructor of formula from a string")
 
@@ -652,62 +638,62 @@ def main():
   except IncorrectFormula as incfor:
     print("Test FAILED. Check the function Calculating the ppm difference between a formula and an experimental value. Expected: " + str(expected_value) + " ACTUAL: " + str(current_value))
 
-  print("=================================================================.")
-  print("Test Case 11: Testing the addition of two formulas")
-  print("=================================================================.")
-  try:
-    formula_1 = 'C4H4O2'
-    formula_2 = 'C4H6O1'
-    adduct = None 
-    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
-    my_formula_2 = Formula.formula_from_str(formula_2, adduct)
-    expected_value = Formula.formula_from_str('C8H10O3', adduct)
-    current_value = my_formula_1 + my_formula_2
-    if(current_value == expected_value):
-      print("Test PASSED. The method to add two formulas is working.")
-    else:
-      print("Test FAILED. Check the method The function to add two formulas. Expected: " + str(expected_value) + " ACTUAL: " + str(current_value))
-  except IncorrectFormula as incfor:
-    print(incfor)
-    print("Test FAILED. Check the method The function to add two formulas. Expected: " + str(expected_value) + " ACTUAL: " + str(current_value))
+  # print("=================================================================.")
+  # print("Test Case 11: Testing the addition of two formulas")
+  # print("=================================================================.")
+  # try:
+  #   formula_1 = 'C4H4O2'
+  #   formula_2 = 'C4H6O1'
+  #   adduct = None 
+  #   my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+  #   my_formula_2 = Formula.formula_from_str(formula_2, adduct)
+  #   expected_value = Formula.formula_from_str('C8H10O3', adduct)
+  #   current_value = my_formula_1 + my_formula_2
+  #   if(current_value == expected_value):
+  #     print("Test PASSED. The method to add two formulas is working.")
+  #   else:
+  #     print("Test FAILED. Check the method The function to add two formulas. Expected: " + str(expected_value) + " ACTUAL: " + str(current_value))
+  # except IncorrectFormula as incfor:
+  #   print(incfor)
+  #   print("Test FAILED. Check the method The function to add two formulas. Expected: " + str(expected_value) + " ACTUAL: " + str(current_value))
 
-  print("=================================================================.")
-  print("Test Case 12: Testing the subtraction of two formulas with a correct formula")
-  print("=================================================================.")
-  try:
-    formula_1 = 'C4H4O2'
-    formula_2 = 'C4H2O1'
-    adduct = None # adduct weight = 18.01056
-    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
-    my_formula_2 = Formula.formula_from_str(formula_2, adduct)
-    expected_value = Formula.formula_from_str('H2O', adduct)
-    current_value = my_formula_1 - my_formula_2
-    if(current_value == expected_value):
-      print("Test PASSED. The method to subtract two formulas correct is working.")
-    else:
-      print("Test FAILED. Check The method to subtract two formulas with proper result. Expected: " + str(expected_value) + " ACTUAL: " + str(current_value))
-  except IncorrectFormula as incfor:
-    print(incfor)
-    print("Test FAILED. The method to subtract two formulas with proper result. Expected: " + str(expected_value) + " ACTUAL: " + str(current_value))
+  # print("=================================================================.")
+  # print("Test Case 12: Testing the subtraction of two formulas with a correct formula")
+  # print("=================================================================.")
+  # try:
+  #   formula_1 = 'C4H4O2'
+  #   formula_2 = 'C4H2O1'
+  #   adduct = None # adduct weight = 18.01056
+  #   my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+  #   my_formula_2 = Formula.formula_from_str(formula_2, adduct)
+  #   expected_value = Formula.formula_from_str('H2O', adduct)
+  #   current_value = my_formula_1 - my_formula_2
+  #   if(current_value == expected_value):
+  #     print("Test PASSED. The method to subtract two formulas correct is working.")
+  #   else:
+  #     print("Test FAILED. Check The method to subtract two formulas with proper result. Expected: " + str(expected_value) + " ACTUAL: " + str(current_value))
+  # except IncorrectFormula as incfor:
+  #   print(incfor)
+  #   print("Test FAILED. The method to subtract two formulas with proper result. Expected: " + str(expected_value) + " ACTUAL: " + str(current_value))
 
 
-  print("=================================================================.")
-  print("Test Case 13: Testing the subtraction of two formulas with netagive elements as a result")
-  print("=================================================================.")
-  try:
-    formula_1 = 'C4H4O2'
-    formula_2 = 'C4H6O1'
-    adduct = None # adduct weight = 41.00328858
-    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
-    my_formula_2 = Formula.formula_from_str(formula_2, adduct)
-    expected_value = Formula.formula_from_str('C8H10O3', adduct)
-    current_value = my_formula_1 - my_formula_2
-    if(current_value == expected_value):
-      print("Test FAILED. Check The method to subtract two formulas with an exception because the second one contains more elements of a specific type than the first one. Expected an exception, but getting ACTUAL: " + str(current_value))
-    else:
-      print("Test FAILED. Check theThe method to subtract two formulas with an exception because the second one contains more elements of a specific type than the first one. Expected: " + str(expected_value) + " ACTUAL: " + str(current_value))
-  except IncorrectFormula as incfor:
-    print("Test PASSED. The method to subtract two formulas where the second one contains a higher number of elements than the first one is working.")
+  # print("=================================================================.")
+  # print("Test Case 13: Testing the subtraction of two formulas with netagive elements as a result")
+  # print("=================================================================.")
+  # try:
+  #   formula_1 = 'C4H4O2'
+  #   formula_2 = 'C4H6O1'
+  #   adduct = None # adduct weight = 41.00328858
+  #   my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+  #   my_formula_2 = Formula.formula_from_str(formula_2, adduct)
+  #   expected_value = Formula.formula_from_str('C8H10O3', adduct)
+  #   current_value = my_formula_1 - my_formula_2
+  #   if(current_value == expected_value):
+  #     print("Test FAILED. Check The method to subtract two formulas with an exception because the second one contains more elements of a specific type than the first one. Expected an exception, but getting ACTUAL: " + str(current_value))
+  #   else:
+  #     print("Test FAILED. Check theThe method to subtract two formulas with an exception because the second one contains more elements of a specific type than the first one. Expected: " + str(expected_value) + " ACTUAL: " + str(current_value))
+  # except IncorrectFormula as incfor:
+  #   print("Test PASSED. The method to subtract two formulas where the second one contains a higher number of elements than the first one is working.")
 
 
 
