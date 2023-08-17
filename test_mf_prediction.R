@@ -35,6 +35,5 @@ filters = list(minElements = minElements,
 
 elements = Rdisop::initializeElements(c("C", "H", "N", "O", "S"))
 mfs = calcMF(mz = mz, z = charge, ppm = ppm, top = top, elements = elements, Filters = filters)
-print(mfs)
 
 # BIG NOTE TO DO ADD DEPENDENCY R-BASE TO THE CONDA ENVIRONMENT - r-base and rpy in pip dependencies
