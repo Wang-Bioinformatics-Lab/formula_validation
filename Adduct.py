@@ -80,7 +80,10 @@ class Adduct:
     return (self.__multimer == other.__multimer and self.__formula_plus == other.__formula_plus and self.__formula_minus == other.__formula_minus and self.__charge == other.__charge and self.__charge_type == other.__charge_type)
 
   def __str__(self):
-    return f"[{self.__multimer}M {self.get_formula_str()}]{self.__charge}{self.__charge_type}"
+    multimer = "" if self.__multimer == 1 else str(self.__multimer)
+    charge = "" if self.__charge == 1 else str(self.__charge)
+    
+    return f"[{multimer}M{self.get_formula_str()}]{charge}{self.__charge_type}"
 
   
   def __repr__(self):
