@@ -58,12 +58,25 @@ class Formula:
 
   """
   Methods:
-    constructor(elements,adduct): (receives a dict of chemical elements and its apparenaces > 0) and a string representing an adduct in the form '[M+CH3CN+H]+', '[M-3H2O+2H]2+' or '[5M+Ca]2+' where the charge is specified at the end . It should start with a [, then contain the multimer number followed by an M, then the adduct formula with a +-, the closing ], and the number of charges indicated by a number and the symbol +-
-    get_formula_from_str(formula_str): STATIC. Returns a formula from a string representing a formula
-    get_formula_from_smiles(smiles): STATIC. Returns a formula from a SMILES representing a structure
-    check_monoisotopic_mass(external_mass, mass_tolerance_in_ppm=50): check if the mass of the formula and a external mass have a difference higher than the mass_tolerance in ppm established
-    get_monoisotopic_mass(): returns the mass of the formula
-    get_monoisotopic_mass_with_adduct(): returns the monoisotopic mass of the formula +- the adduct
+    __init__(self, elements: Dict[Union['Element_type',str], int], adduct: Union['Adduct', str]): Constructor for the Formula class.
+    __eq__(self, other): Check if two Formula objects are equal.
+    __str__(self): Return a string representation of the Formula object.
+    get_final_formula_with_adduct(self) -> float: Return a string representation of the final formula plus or minus the adduct.
+    __repr__(self): Return a string representation of the Formula object.
+    __hash__(self): Return the hash value of the Formula object.
+    __add__(self, other: 'Formula'): Add another formula to the current one and keep the adduct.
+    __sub__(self, other: 'Formula'): Subtract another formula from the current one and keep the adduct.
+    __mul__(self, num_to_multiply: int): Multiply the formula by a specified number.
+    get_elements(self) -> Dict['Element_type',int]: Get a copy of the dictionary of chemical elements and their counts in the formula.
+    get_monoisotopic_mass(self) -> float: Get the monoisotopic mass of the formula.
+    get_monoisotopic_mass_with_adduct(self) -> float: Get the monoisotopic mass of the formula, taking into account the adduct.
+    check_monoisotopic_mass(self, external_mass: Union[float,int], mass_tolerance_in_ppm: Union[int, float] = __default_ppm) -> bool: Check if the monoisotopic mass of the formula is within a specified mass tolerance of an external mass.
+    check_monoisotopic_mass_with_adduct(self, external_mass: Union[float,int], mass_tolerance_in_ppm: Union[int, float] = __default_ppm) -> bool: Check if the monoisotopic mass of the formula, considering the adduct, is within a specified mass tolerance of an external mass.
+    ppm_difference_with_exp_mass(self, reference_monoisotopic_mass: Union[float,int]) -> float: Calculate the ppm difference between the monoisotopic mass of the formula and a reference mass.
+    absolute_to_ppm(reference_monoisotopic_mass: Union[float,int], mass_to_compare: Union[float,int]) -> float: Convert an absolute mass difference to ppm.
+    ppm_to_absolute(reference_monoisotopic_mass: Union[float,int], ppm: Union[float,int] = __default_ppm) -> float: Convert ppm to an absolute mass difference.
+    check_possible_fragment_mz(self, fragment_mz: Union[float, int], ppm: Union[float, int] = __default_ppm): Check if a fragment mass can be explained by the formula and adduct.
+    percentage_intensity_fragments_explained_by_formula(self, fragments_mz_intensities: Dict[Union[float, int], Union[float, int]], ppm: Union[float, int] = __default_ppm): Calculate the percentage of intensity of fragments explained by the formula and adduct.
   """
   
   def __init__(self, elements: Dict[Union['Element_type',str], int], adduct: Union['Adduct', str]):
