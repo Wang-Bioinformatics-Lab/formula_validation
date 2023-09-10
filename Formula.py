@@ -75,18 +75,18 @@ class Formula:
       __sub__(self, other: 'Formula'): Subtracts another formula from the current one and keeps the adduct.
       __mul__(self, num_to_multiply: int): Multiplies the formula by a specified number.
     Access and Information
-    get_elements(self) -> Dict['Element_type',int]: Gets a copy of the dictionary of chemical elements and their counts in the formula.
-    get_monoisotopic_mass(self) -> float: Gets the monoisotopic mass of the formula.
-    get_monoisotopic_mass_with_adduct(self) -> float: Gets the monoisotopic mass of the formula, taking into account the adduct.
+      get_elements(self) -> Dict['Element_type',int]: Gets a copy of the dictionary of chemical elements and their counts in the formula.
+      get_monoisotopic_mass(self) -> float: Gets the monoisotopic mass of the formula.
+      get_monoisotopic_mass_with_adduct(self) -> float: Gets the monoisotopic mass of the formula, taking into account the adduct.
     Mass Comparison
-    check_monoisotopic_mass(self, external_mass: Union[float,int], mass_tolerance_in_ppm: Union[int, float]) -> bool: Checks if the monoisotopic mass of the formula is within a specified mass tolerance of an external mass.
-    check_monoisotopic_mass_with_adduct(self, external_mass: Union[float,int], mass_tolerance_in_ppm: Union[int, float]) -> bool: Checks if the monoisotopic mass of the formula, considering the adduct, is within a specified mass tolerance of an external mass.
-    ppm_difference_with_exp_mass(self, reference_monoisotopic_mass: Union[float,int]) -> float: Calculates the ppm difference between the monoisotopic mass of the formula and a reference mass.
-    absolute_to_ppm(reference_monoisotopic_mass: Union[float,int], mass_to_compare: Union[float,int]) -> float: Converts an absolute mass difference to ppm.
-    ppm_to_absolute(reference_monoisotopic_mass: Union[float,int], ppm: Union[float,int]) -> float: Converts ppm to an absolute mass difference.
+      check_monoisotopic_mass(self, external_mass: Union[float,int], mass_tolerance_in_ppm: Union[int, float]) -> bool: Checks if the monoisotopic mass of the formula is within a specified mass tolerance of an external mass.
+      check_monoisotopic_mass_with_adduct(self, external_mass: Union[float,int], mass_tolerance_in_ppm: Union[int, float]) -> bool: Checks if the monoisotopic mass of the formula, considering the adduct, is within a specified mass tolerance of an external mass.
+      ppm_difference_with_exp_mass(self, reference_monoisotopic_mass: Union[float,int]) -> float: Calculates the ppm difference between the monoisotopic mass of the formula and a reference mass.
+      absolute_to_ppm(reference_monoisotopic_mass: Union[float,int], mass_to_compare: Union[float,int]) -> float: Converts an absolute mass difference to ppm.
+      ppm_to_absolute(reference_monoisotopic_mass: Union[float,int], ppm: Union[float,int]) -> float: Converts ppm to an absolute mass difference.
     Fragment Analysis
-    check_possible_fragment_mz(self, fragment_mz: Union[float, int], ppm: Union[float, int]): Checks if a fragment mass can be explained by the formula and adduct.
-    percentage_intensity_fragments_explained_by_formula(self, fragments_mz_intensities: Dict[Union[float, int], Union[float, int]], ppm: Union[float, int]): Calculates the percentage of intensity of fragments explained by the formula and adduct.
+      check_possible_fragment_mz(self, fragment_mz: Union[float, int], ppm: Union[float, int]): Checks if a fragment mass can be explained by the formula and adduct.
+      percentage_intensity_fragments_explained_by_formula(self, fragments_mz_intensities: Dict[Union[float, int], Union[float, int]], ppm: Union[float, int]): Calculates the percentage of intensity of fragments explained by the formula and adduct.
   Private Methods:
     __calculate_monoisotopic_mass(self) -> float: Calculates the monoisotopic mass of the formula.
     __calculate_monoisotopic_mass_with_adduct(self) -> float: Calculates the monoisotopic mass of the formula, taking into account the adduct.
