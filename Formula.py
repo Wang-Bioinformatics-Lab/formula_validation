@@ -49,12 +49,7 @@ class Formula:
   
   __default_ppm = 50
 
-  robjects.r('''
-    install.packages("devtools")
-    devtools::install_github("mjhelf/MassTools")
-
-    library(MassTools)
-  ''')
+  robjects.r('''library(MassTools)''')
 
   """
   Methods:
@@ -247,11 +242,12 @@ class Formula:
       
     return Formula(elements, adduct)
   
-  def formula_from_str(formula_str: str, adduct: str) -> 'Formula':
+  def formula_from_str(formula_str: str, adduct: str, no_api:bool=False) -> 'Formula':
     """
     Args:
       formula_str (str): represents a molecular formula as a string of type [Element_type][NumberOfOccurences]: C4H5N6Na. It can contain parenthesis. 
       adduct (str): adduct representing the adduct formed by the molecular formula expressed by the form '[M+C2H2O-H]-'
+      no_api (bool): prevents this function from making API calls
     Returns:
       Formula: a new instance of a formula with the elements specified in the string
     Raises:
@@ -266,26 +262,30 @@ class Formula:
       # If the formula could not be processed directly, then it is processed by chemcalc
       pass
 
-    params = {'mf': formula_str,
-      'isotopomers': 'jcamp,xy'
-    }
-    response = Formula.__connection_to_chemcalc_ws.request("GET",Formula.__ccurl, fields=params, retries = 3)
+    if not no_api:
+      params = {'mf': formula_str,
+        'isotopomers': 'jcamp,xy'
+      }
+      response = Formula.__connection_to_chemcalc_ws.request("GET",Formula.__ccurl, fields=params, retries = 3)
 
-    # Read the output and convert it from JSON into a Python dictionary
-    if(response.status != 200):
-      raise IncorrectFormula("The formula " + formula_str + " was not parseable to a correct formula")
+      # Read the output and convert it from JSON into a Python dictionary
+      if(response.status != 200):
+        raise IncorrectFormula("The formula " + formula_str + " was not parseable to a correct formula")
+      
+      data = response.json()
+      
+      mf_hill = data['mf']
+      return Formula.formula_from_str_hill(mf_hill, adduct)
+    else:
+      return None
     
-    data = response.json()
     
-    mf_hill = data['mf']
-    return Formula.formula_from_str_hill(mf_hill, adduct)
-    
-    
-  def formula_from_smiles(smiles: str, adduct: str) -> 'Formula':
+  def formula_from_smiles(smiles: str, adduct: str, no_api:bool=False) -> 'Formula':
     """
     Args:
       smiles (str): represents a molecular structure as a string. Example: CCCCCCC[C@@H](C/C=C/CCC(=O)NC/C(=C/Cl)/[C@@]12[C@@H](O1)[C@H](CCC2=O)O)OC
       adduct (str): adduct representing the adduct formed by the molecular formula expressed by the form '[M+C2H2O-H]-'
+      no_api (bool): prevents this function from making API calls
     Returns:
       Formula: according to the structure
     Raises:
@@ -302,14 +302,15 @@ class Formula:
     if mol is None:
       raise IncorrectFormula(smiles)
     formula = CalcMolFormula(mol)
-    return Formula.formula_from_str(formula, adduct)
+    return Formula.formula_from_str(formula, adduct, no_api)
     
     
-  def formula_from_inchi(inchi: str, adduct: str) -> 'Formula':
+  def formula_from_inchi(inchi: str, adduct: str, no_api:bool=False) -> 'Formula':
     """
     Args:
       inchi (str): represents a molecular structure as a string. Example: InChI=1S/C45H73N5O10S3/c1-14-17-24(6)34(52)26(8)37-25(7)30(58-13)18-31-46-29(19-61-31)39-49-45(12,21-62-39)43-50-44(11,20-63-43)42(57)48-32(22(4)15-2)35(53)27(9)40(55)59-36(23(5)16-3)38(54)47-33(28(10)51)41(56)60-37/h19,22-28,30,32-37,51-53H,14-18,20-21H2,1-13H3,(H,47,54)(H,48,57)/t22-,23-,24+,25-,26-,27+,28+,30-,32-,33-,34-,35-,36-,37-,44+,45+/m0/s1
       adduct (str): adduct representing the adduct formed by the molecular formula expressed by the form '[M+C2H2O-H]-'
+      no_api (bool): prevents this function from making API calls
     Returns:
       Formula: according to the structure
     Raises:
@@ -324,7 +325,7 @@ class Formula:
     if mol is None:
       raise IncorrectFormula(inchi)
     formula = CalcMolFormula(mol)
-    return Formula.formula_from_str(formula, adduct)
+    return Formula.formula_from_str(formula, adduct, no_api)
       
   def get_elements(self) -> Dict['Element_type',int]:
     """
