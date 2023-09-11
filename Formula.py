@@ -312,13 +312,14 @@ class Formula:
     return Formula(elements, adduct)
   
   @staticmethod
-  def formula_from_str(formula_str: str, adduct: str) -> 'Formula':
+  def formula_from_str(formula_str: str, adduct: str, no_api:bool=False) -> 'Formula':
     """
       Static method to create a Formula object from a chemical formula string.
 
       Args:
         formula_str (str): A string representing a molecular formula. Example: 'C4H5N6Na'.
         adduct (str): A string representing an adduct in the form '[M+C2H2O-H]-', '[M-3H2O+2H]2+' or '[5M+Ca]2+' where the charge is specified at the end.
+        no_api (bool): Disables api calls for formula resolution.
 
       Returns:
         Formula: A new instance of the Formula class with the elements specified in the string.
@@ -352,13 +353,14 @@ class Formula:
       return None
     
   @staticmethod
-  def formula_from_smiles(smiles: str, adduct: str) -> 'Formula':
+  def formula_from_smiles(smiles: str, adduct: str, no_api:bool=False) -> 'Formula':
     """
       Static method to create a Formula object from a SMILES (Simplified Molecular Input Line Entry System) string.
 
       Args:
         smiles (str): A string representing a molecular structure in SMILES notation. Example: CCCCCCC[C@@H](C/C=C/CCC(=O)NC/C(=C/Cl)/[C@@]12[C@@H](O1)[C@H](CCC2=O)O)OC
         adduct (str): A string representing an adduct in the form '[M+C2H2O-H]-', '[M-3H2O+2H]2+' or '[5M+Ca]2+' where the charge is specified at the end.
+        no_api (bool): Disables api calls for formula resolution.
 
       Returns:
         Formula: A new instance of the Formula class according to the molecular structure.
@@ -380,13 +382,14 @@ class Formula:
     return Formula.formula_from_str(formula, adduct, no_api)
     
   @staticmethod
-  def formula_from_inchi(inchi: str, adduct: str) -> 'Formula':
+  def formula_from_inchi(inchi: str, adduct: str, no_api:bool=False) -> 'Formula':
     """
       Static method to create a Formula object from an InChI (International Chemical Identifier) string.
 
       Args:
         inchi (str): A string representing a molecular structure in InChI notation. Example: InChI=1S/C45H73N5O10S3/c1-14-17-24(6)34(52)26(8)37-25(7)30(58-13)18-31-46-29(19-61-31)39-49-45(12,21-62-39)43-50-44(11,20-63-43)42(57)48-32(22(4)15-2)35(53)27(9)40(55)59-36(23(5)16-3)38(54)47-33(28(10)51)41(56)60-37/h19,22-28,30,32-37,51-53H,14-18,20-21H2,1-13H3,(H,47,54)(H,48,57)/t22-,23-,24+,25-,26-,27+,28+,30-,32-,33-,34-,35-,36-,37-,44+,45+/m0/s1
         adduct (str): A string representing an adduct in the form '[M+C2H2O-H]-', '[M-3H2O+2H]2+' or '[5M+Ca]2+' where the charge is specified at the end.
+        no_api (bool): Disables api calls for formula resolution.
 
       Returns:
         Formula: A new instance of the Formula class according to the molecular structure.
