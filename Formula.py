@@ -53,26 +53,56 @@ class Formula:
 
   """
   Methods:
-
-  constructor(elements,adduct): (receives a dict of chemical elements and its apparenaces > 0) and a string representing an adduct in the form '[M+CH3CN+H]+', '[M-3H2O+2H]2+' or '[5M+Ca]2+' where the charge is specified at the end . It should start with a [, then contain the multimer number followed by an M, then the adduct formula with a +-, the closing ], and the number of charges indicated by a number and the symbol +-
-  get_formula_from_str(formula_str): STATIC. Returns a formula from a string representing a formula
-  get_formula_from_smiles(smiles): STATIC. Returns a formula from a SMILES representing a structure
-  check_monoisotopic_mass(external_mass, mass_tolerance_in_ppm=50): check if the mass of the formula and a external mass have a difference higher than the mass_tolerance in ppm established
-  get_monoisotopic_mass(): returns the mass of the formula
-  get_monoisotopic_mass_with_adduct(): returns the monoisotopic mass of the formula +- the adduct
-    """
+    Constructor
+      formula_from_str_hill(formula_str: str, adduct: str) -> 'Formula'
+      formula_from_str(formula_str: str, adduct: str) -> 'Formula'
+      formula_from_smiles(smiles: str, adduct: str) -> 'Formula'
+      formula_from_inchi(inchi: str, adduct: str) -> 'Formula'
+      __init__(self, elements: Dict[Union['Element_type',str], int], adduct: Union['Adduct', str]): Initializes a Formula object with a dictionary of chemical elements and an optional adduct.
+    Comparison and Representation
+      __eq__(self, other): Checks if two Formula objects are equal.
+      __str__(self): Returns a string representation of the Formula object.
+      get_final_formula_with_adduct(self) -> str: Returns the final formula with the adduct as a string.
+      __repr__(self): Returns a string representation of the Formula object.
+      __hash__(self): Returns the hash value of the Formula object.
+    Mathematical Operations
+      __add__(self, other: 'Formula'): Adds another formula to the current one and keeps the adduct.
+      __sub__(self, other: 'Formula'): Subtracts another formula from the current one and keeps the adduct.
+      __mul__(self, num_to_multiply: int): Multiplies the formula by a specified number.
+    Access and Information
+      get_elements(self) -> Dict['Element_type',int]: Gets a copy of the dictionary of chemical elements and their counts in the formula.
+      get_monoisotopic_mass(self) -> float: Gets the monoisotopic mass of the formula.
+      get_monoisotopic_mass_with_adduct(self) -> float: Gets the monoisotopic mass of the formula, taking into account the adduct.
+    Mass Comparison
+      check_monoisotopic_mass(self, external_mass: Union[float,int], mass_tolerance_in_ppm: Union[int, float]) -> bool: Checks if the monoisotopic mass of the formula is within a specified mass tolerance of an external mass.
+      check_monoisotopic_mass_with_adduct(self, external_mass: Union[float,int], mass_tolerance_in_ppm: Union[int, float]) -> bool: Checks if the monoisotopic mass of the formula, considering the adduct, is within a specified mass tolerance of an external mass.
+      ppm_difference_with_exp_mass(self, reference_monoisotopic_mass: Union[float,int]) -> float: Calculates the ppm difference between the monoisotopic mass of the formula and a reference mass.
+      absolute_to_ppm(reference_monoisotopic_mass: Union[float,int], mass_to_compare: Union[float,int]) -> float: Converts an absolute mass difference to ppm.
+      ppm_to_absolute(reference_monoisotopic_mass: Union[float,int], ppm: Union[float,int]) -> float: Converts ppm to an absolute mass difference.
+    Fragment Analysis
+      check_possible_fragment_mz(self, fragment_mz: Union[float, int], ppm: Union[float, int]): Checks if a fragment mass can be explained by the formula and adduct.
+      percentage_intensity_fragments_explained_by_formula(self, fragments_mz_intensities: Dict[Union[float, int], Union[float, int]], ppm: Union[float, int]): Calculates the percentage of intensity of fragments explained by the formula and adduct.
+  Private Methods:
+    __calculate_monoisotopic_mass(self) -> float: Calculates the monoisotopic mass of the formula.
+    __calculate_monoisotopic_mass_with_adduct(self) -> float: Calculates the monoisotopic mass of the formula, taking into account the adduct.
+  Static Methods: 
+    Defines static methods to create Formula objects from different notations (Hill, SMILES, InChI).
+"""
   
   def __init__(self, elements: Dict[Union['Element_type',str], int], adduct: Union['Adduct', str]):
     """
+    Constructor for the Formula class.
     Args:
       element_type (dict of Element_type and int): dictionary containing elements and their apps in a formula. If an element appears more than once, its appearences will be updated. Example {'C': 48, 'H': 72, 'N': 10, 'O': 12}
       adduct: string representing an adduct in the form '[M+CH3CN+H]+', '[M-3H2O+2H]2+' or '[5M+Ca]2+' where the charge is specified at the end . It should start with a [, then contain the multimer number followed by an M, then the adduct formula with a +-, the closing ], and the number of charges indicated by a number and the symbol +-
-    Returns:
-      Formula: a new instance of a formula
+    
     Raises:
       IncorrectFormula: if the number of appearances is <=0
       NotFoundElement: if the dict contains elements that not a chemical element
       IncorrectAdduct: if the adduct is not a valid adduct with the format: '[M+C2H2O-H]-'
+    
+    Returns:
+      Formula: a new instance of a formula
     """
     
     # The connection pool can be full so we to open a new one if not initialized
@@ -121,14 +151,51 @@ class Formula:
 
     
   def __eq__(self, other):
-    if not isinstance(other, Formula):
+    """
+      Check if two Formula objects are equal.
+
+      Args:
+        other (Formula): The other Formula object to compare with.
+
+      Returns:
+        bool: True if the two Formula objects are equal, otherwise False.
+    """
+    if isinstance(other, Formula):
+      return self.__elements == other.get_elements()
+    else:
       return False
-    return self.__elements == other.get_elements()
+    
 
   def __str__(self):
-    result_string = "".join(str(key.name) + str(value) for key,value in self.__elements.items())
+    """
+      Return a string representation of the Formula object.
+
+      Returns:
+        str: A string representation of the Formula object in the format 'C4H5N6Na+[M+H]+'
+    """
+    result_string = "".join( str(key.name) + (str(value) if value > 1 else "") for key,value in self.__elements.items())
+    adduct_str = "" if self.__adduct == None else "+" + str(self.__adduct)
+
+    result_string = result_string + adduct_str
     return result_string
   
+  def get_final_formula_with_adduct(self) -> float:
+    """
+      Return a string representation of the final formula plus or minus de the adduct. 
+
+      Returns:
+        str: A string representation of the Formula object (C12H3N3O+[M-H2O+H]+) in the format '[C12H2N3]+'
+    """
+    charge = "" if self.__adduct.get_adduct_charge() == 1 else str(self.__adduct.get_adduct_charge())
+    charge_type = self.__adduct.get_adduct_charge_type()
+    formula_plus = self.__adduct.get_formula_plus()
+    formula_minus = self.__adduct.get_formula_minus()
+    final_formula = self+formula_plus
+    final_formula = final_formula-formula_minus
+    str_final_formula="[" + str(final_formula) + "]" + charge + charge_type
+    return str_final_formula
+    
+
   def __repr__(self):
     return str(self)
 
@@ -137,39 +204,39 @@ class Formula:
   
   def __add__(self, other: 'Formula'):
     """
-    Args:
-        other (Formula): another formula to add the elements with the current one and keeps the adduct of the current formula
+      Args:
+          other (Formula): another formula to add the elements with the current one and keeps the adduct of the current formula
 
-    Raises:
-        IncorrectFormula: if the object is not a formula
+      Raises:
+          IncorrectFormula: if the object is not a formula
 
-    Requirements: 
-        module copy is used to make a deep copy of an object
-    Returns:
-        formula (Formula): a new formula that is the addition of the chemical elements from both formulas
+      Requirements: 
+          module copy is used to make a deep copy of an object
+      Returns:
+          formula (Formula): a new formula that is the addition of the chemical elements from both formulas
     """
     import copy
     if isinstance(other, Formula):
       new_formula_dict = copy.deepcopy(self.__elements)
       for element,counts_in_other in other.__elements.items():
         new_formula_dict[element] = new_formula_dict.get(element,0) + counts_in_other
-      return Formula(new_formula_dict, self.__adduct)
+      return Formula(new_formula_dict, None)
     else:
         raise IncorrectFormula("other should be a formula and is a " + str(type(other)))
     
 
   def __sub__(self, other: 'Formula'):
     """
-    Args:
-        other (Formula): another formula to subtract the elements from the current one and keeps the adduct of the current formula
+      Args:
+          other (Formula): another formula to subtract the elements from the current one and keeps the adduct of the current formula
 
-    Raises:
-        IncorrectFormula: if the object is not a formula
+      Raises:
+          IncorrectFormula: if the object is not a formula
 
-    Requirements: 
-        module copy is used to make a deep copy of an object
-    Returns:
-        formula (Formula): a new formula that is the subtraction of the chemical elements 
+      Requirements: 
+          module copy is used to make a deep copy of an object
+      Returns:
+          formula (Formula): a new formula that is the subtraction of the chemical elements 
     """
     import copy
     if isinstance(other, Formula):
@@ -185,27 +252,26 @@ class Formula:
           raise IncorrectFormula("The subtraction of these two formulas contain a negative number of {element}")  
       for element_to_remove in elements_to_remove:
         del new_formula_dict[element_to_remove]
-      return Formula(new_formula_dict, self.__adduct)
+      return Formula(new_formula_dict, None)
       
     else:
         raise IncorrectFormula("other should be a formula and is a " + str(type(other)))
     
   def __mul__(self, num_to_multiply: int):
     """
-    Args:
+      Args:
         other (Formula): another formula to add the elements with the current one
 
-    Raises:
+      Raises:
         IncorrectFormula: if the object is not a formula
 
-    Requirements: 
+      Requirements: 
         module copy is used to make a deep copy of an object
-    Returns:
+      Returns:
         formula (Formula): a new formula that is the addition of the chemical elements from both formulas
     """
     import copy
     if isinstance(num_to_multiply, int):
-
       new_formula_dict = copy.deepcopy(self.__elements)
       for element,counts_in_other in self.__elements.items():
         new_formula_dict[element] = new_formula_dict.get(element,0) * num_to_multiply
@@ -213,17 +279,20 @@ class Formula:
     else:
         raise IncorrectFormula("other should be a formula and is a " + str(type(Formula)))
     
-
+  @staticmethod
   def formula_from_str_hill(formula_str: str, adduct: str) -> 'Formula':
     """
-    Args:
-      formula_str (str): represents a molecular formula as a string of type [Element_type][NumberOfOccurences]: C4H5N6Na. It can contain parenthesis. 
-      adduct (str): adduct representing the adduct formed by the molecular formula expressed by the form '[M+C2H2O-H]-'
-    Returns:
-      Formula: a new instance of a formula with the elements specified in the string
-    Raises:
-      IncorrectFormula: if the number of appearances is <=0
-      NotFoundElement: if the dict contains elements that not a chemical element
+      Static method to create a Formula object from a chemical formula string in Hill notation.
+
+      Args:
+        formula_str (str): A string representing a molecular formula in Hill notation. Example: 'C4H5N6Na'.
+        adduct (str): A string representing an adduct in the form '[M+C2H2O-H]-', '[M-3H2O+2H]2+' or '[5M+Ca]2+' where the charge is specified at the end.
+
+      Returns:
+        Formula: A new instance of the Formula class with the elements specified in the string.
+
+      Raises:
+        IncorrectFormula: If the number of appearances is <=0 or if the formula contains elements that are not valid chemical elements.
     """
     import re
     if re.search(r'(?<![A-Z])[a-z]', formula_str):
@@ -242,6 +311,7 @@ class Formula:
       
     return Formula(elements, adduct)
   
+<<<<<<< HEAD
   def formula_from_str(formula_str: str, adduct: str, no_api:bool=False) -> 'Formula':
     """
     Args:
@@ -253,6 +323,22 @@ class Formula:
     Raises:
       IncorrectFormula: if the number of appearances is <=0
       NotFoundElement: if the dict contains elements that not a chemical element
+=======
+  @staticmethod
+  def formula_from_str(formula_str: str, adduct: str) -> 'Formula':
+    """
+      Static method to create a Formula object from a chemical formula string.
+
+      Args:
+        formula_str (str): A string representing a molecular formula. Example: 'C4H5N6Na'.
+        adduct (str): A string representing an adduct in the form '[M+C2H2O-H]-', '[M-3H2O+2H]2+' or '[5M+Ca]2+' where the charge is specified at the end.
+
+      Returns:
+        Formula: A new instance of the Formula class with the elements specified in the string.
+
+      Raises:
+        IncorrectFormula: If the number of appearances is <=0 or if the formula contains elements that are not valid chemical elements.
+>>>>>>> d89e7ab991e5035366d67b2ade2af98cd8a1554c
     """
     # First, we assume that formula is simple and it is not necessary to process it from the web server. 
     try:
@@ -279,6 +365,7 @@ class Formula:
     else:
       return None
     
+<<<<<<< HEAD
     
   def formula_from_smiles(smiles: str, adduct: str, no_api:bool=False) -> 'Formula':
     """
@@ -290,6 +377,22 @@ class Formula:
       Formula: according to the structure
     Raises:
       IncorrectFormula: if the SMILES does not represent a structure
+=======
+  @staticmethod
+  def formula_from_smiles(smiles: str, adduct: str) -> 'Formula':
+    """
+      Static method to create a Formula object from a SMILES (Simplified Molecular Input Line Entry System) string.
+
+      Args:
+        smiles (str): A string representing a molecular structure in SMILES notation. Example: CCCCCCC[C@@H](C/C=C/CCC(=O)NC/C(=C/Cl)/[C@@]12[C@@H](O1)[C@H](CCC2=O)O)OC
+        adduct (str): A string representing an adduct in the form '[M+C2H2O-H]-', '[M-3H2O+2H]2+' or '[5M+Ca]2+' where the charge is specified at the end.
+
+      Returns:
+        Formula: A new instance of the Formula class according to the molecular structure.
+
+      Raises:
+        IncorrectFormula: If the SMILES string does not represent a valid molecular structure.
+>>>>>>> d89e7ab991e5035366d67b2ade2af98cd8a1554c
     """
     from rdkit import Chem
     from rdkit.Chem.rdMolDescriptors import CalcMolFormula
@@ -304,6 +407,7 @@ class Formula:
     formula = CalcMolFormula(mol)
     return Formula.formula_from_str(formula, adduct, no_api)
     
+<<<<<<< HEAD
     
   def formula_from_inchi(inchi: str, adduct: str, no_api:bool=False) -> 'Formula':
     """
@@ -315,7 +419,24 @@ class Formula:
       Formula: according to the structure
     Raises:
       IncorrectFormula: if the SMILES does not represent a structure
+=======
+  @staticmethod
+  def formula_from_inchi(inchi: str, adduct: str) -> 'Formula':
     """
+      Static method to create a Formula object from an InChI (International Chemical Identifier) string.
+
+      Args:
+        inchi (str): A string representing a molecular structure in InChI notation. Example: InChI=1S/C45H73N5O10S3/c1-14-17-24(6)34(52)26(8)37-25(7)30(58-13)18-31-46-29(19-61-31)39-49-45(12,21-62-39)43-50-44(11,20-63-43)42(57)48-32(22(4)15-2)35(53)27(9)40(55)59-36(23(5)16-3)38(54)47-33(28(10)51)41(56)60-37/h19,22-28,30,32-37,51-53H,14-18,20-21H2,1-13H3,(H,47,54)(H,48,57)/t22-,23-,24+,25-,26-,27+,28+,30-,32-,33-,34-,35-,36-,37-,44+,45+/m0/s1
+        adduct (str): A string representing an adduct in the form '[M+C2H2O-H]-', '[M-3H2O+2H]2+' or '[5M+Ca]2+' where the charge is specified at the end.
+
+      Returns:
+        Formula: A new instance of the Formula class according to the molecular structure.
+
+      Raises:
+        IncorrectFormula: If the InChI string does not represent a valid molecular structure.
+>>>>>>> d89e7ab991e5035366d67b2ade2af98cd8a1554c
+    """
+
     from rdkit import Chem
     from rdkit.Chem.rdMolDescriptors import CalcMolFormula
     if not inchi.startswith('InChI='):
@@ -329,8 +450,11 @@ class Formula:
       
   def get_elements(self) -> Dict['Element_type',int]:
     """
-    Returns: A copy of the dictionary of the elements so the formula cannot be mutated
-    """
+      Get a copy of the dictionary of chemical elements and their counts in the formula.
+
+      Returns:
+        Dict['Element_type', int]: A dictionary containing chemical elements as keys and their respective counts as values.
+        """
     return self.__elements.copy()
 
   def __calculate_monoisotopic_mass(self) -> float:
@@ -342,13 +466,20 @@ class Formula:
         
   def get_monoisotopic_mass(self) -> float:
     """
-    Returns: the monoisotopic mass of the formula taking into account the adduct formed, such as '[M+CH3CN+H]+', '[M-3H2O+2H]2+' or '[5M+Ca]2+'
+        Get the monoisotopic mass of the formula, taking into account the adduct.
+
+        Returns:
+          float: The monoisotopic mass of the formula with the adduct considered.
     """
+
     return self.__monoisotopic_mass
   
   def __calculate_monoisotopic_mass_with_adduct(self) -> float:
     """
-    Returns: the monoisotopic mass of the formula taking into account the adduct formed, such as '[M+CH3CN+H]+', '[M-3H2O+2H]2+' or '[5M+Ca]2+'
+      Get the monoisotopic mass of the formula, taking into account the adduct.
+
+      Returns:
+        float: The monoisotopic mass of the formula with the adduct considered.
     """
     monoisotopic_mass_with_adduct= self.get_monoisotopic_mass()
     if self.__adduct == None:
@@ -374,18 +505,24 @@ class Formula:
 
   def get_monoisotopic_mass_with_adduct(self) -> float:
     """
-    Returns: the monoisotopic mass of the formula taking into account the adduct coupled to the structure
+      Get the monoisotopic mass of the formula, taking into account the adduct.
+
+      Returns:
+        float: The monoisotopic mass of the formula with the adduct considered.
     """
     return self.__monoisotopic_mass_with_adduct
     
 
   def check_monoisotopic_mass(self, external_mass: Union[float,int], mass_tolerance_in_ppm: Union[int, float] = __default_ppm) -> bool:
     """
-    Args:
-      external_mass (numeric): represents a monoisotopic mass to be compared with the mass of the formula
-      mass_tolerance_in_ppm (numeric): mass tolerance permitted
-    Returns: wether the external_mass is within the mass of the formula +- the tolerance established in ppm
-    Raise: a exception if external_mass or mass_tolerance_in_ppm are not numbers
+      Check if the monoisotopic mass of the formula is within a specified mass tolerance of an external mass.
+
+      Args:
+        external_mass (Union[float,int]): The external monoisotopic mass to compare with the formula's mass.
+        mass_tolerance_in_ppm (Union[int, float]): The mass tolerance in parts per million (ppm) for the comparison.
+
+      Returns:
+        bool: True if the external mass is within the specified tolerance of the formula's mass, otherwise False.
     """
     import math
     abs_value_delta = Formula.ppm_to_absolute(self.get_monoisotopic_mass(), mass_tolerance_in_ppm)
@@ -396,11 +533,14 @@ class Formula:
   
   def check_monoisotopic_mass_with_adduct(self, external_mass: Union[float,int], mass_tolerance_in_ppm: Union[int, float] = __default_ppm) -> bool:
     """
-    Args:
-      external_mass (numeric): represents a monoisotopic mass to be compared with the mass of the formula
-      mass_tolerance_in_ppm (numeric): mass tolerance permitted
-    Returns: wether the external_mass is within the mass of the formula +- the tolerance established in ppm
-    Raise: a exception if external_mass or mass_tolerance_in_ppm are not numbers
+      Check if the monoisotopic mass of the formula, considering the adduct, is within a specified mass tolerance of an external mass.
+
+      Args:
+        external_mass (Union[float,int]): The external monoisotopic mass to compare with the formula's mass with the adduct.
+        mass_tolerance_in_ppm (Union[int, float]): The mass tolerance in parts per million (ppm) for the comparison.
+
+      Returns:
+        bool: True if the external mass is within the specified tolerance of the formula's mass with the adduct, otherwise False.
     """
     import math
     abs_value_delta = Formula.ppm_to_absolute(self.get_monoisotopic_mass_with_adduct(), mass_tolerance_in_ppm)
@@ -412,22 +552,31 @@ class Formula:
 
   def ppm_difference_with_exp_mass(self, reference_monoisotopic_mass: Union[float,int]) -> float:
     """
-    Args:
-      reference_monoisotopic_mass (numeric): monoisotopic mass of reference
+      Args:
+        reference_monoisotopic_mass (numeric): monoisotopic mass of reference
       
-    Returns: the ppms between the monoisotopic mass of the formula taking into account the adduct and the experimental mass detected
-    Raise: a exception if reference_monoisotopic_mass or ppm are not numbers
+      Raise: 
+        A exception if reference_monoisotopic_mass or ppm are not numbers  
+      
+      Returns: 
+        The ppms between the monoisotopic mass of the formula taking into account the adduct and the experimental mass detected
+      
     """
     return Formula.absolute_to_ppm(self.get_monoisotopic_mass_with_adduct(), reference_monoisotopic_mass)
 
   
   def absolute_to_ppm(reference_monoisotopic_mass: Union[float,int], mass_to_compare: Union[float,int]) -> float:
     """
-    Args:
-      reference_monoisotopic_mass (numeric): monoisotopic mass of reference
-      mass_to_compare(numeric): mass to compare
-    Returns: the ppms between the reference_monoisotopic_mass mass and mass_to_compare
-    Raise: a exception if reference_monoisotopic_mass or ppm are not numbers
+      Args:
+        reference_monoisotopic_mass (numeric): monoisotopic mass of reference
+        mass_to_compare(numeric): mass to compare
+      
+      Raise: 
+        A exception if reference_monoisotopic_mass or ppm are not numbers
+        
+      Returns: 
+        The ppms between the reference_monoisotopic_mass mass and mass_to_compare
+    
     """
     
     ppm_diff = abs((reference_monoisotopic_mass - mass_to_compare) / reference_monoisotopic_mass) * 1000000.0
@@ -436,26 +585,30 @@ class Formula:
 
   def ppm_to_absolute(reference_monoisotopic_mass: Union[float,int], ppm: Union[float,int] = __default_ppm) -> float:
     """
-    Args:
-      reference_monoisotopic_mass (numeric): monoisotopic mass of reference
-      ppm (numeric): ppm of the reference monoisotopic mass
-    Returns: 
-      the absolute value of the ppm calculated
-    Raise: 
-      a exception if reference_monoisotopic_mass or ppm are not numbers
+      Args:
+        reference_monoisotopic_mass (numeric): monoisotopic mass of reference
+        ppm (numeric): ppm of the reference monoisotopic mass
+
+      Raise: 
+        a exception if reference_monoisotopic_mass or ppm are not numbers
+
+      Returns: 
+        the absolute value of the ppm calculated
     """
     return (reference_monoisotopic_mass / 1000000.0) * ppm
   
   def check_possible_fragment_mz(self, fragment_mz: Union[float, int], ppm: Union[float, int] = __default_ppm):
     """
-    Args:
-      self (Formula): formula to check if the fragment could be generated by this formula according to the substructure and the adduct. If the adduct has a number of charges > 1, it will check the adducts for double and single charge
-      fragment_mz (numeric): mz_mass to check if it can come from the structure
-      ppm (numeric): ppm of the reference monoisotopic mass to check the potential formulas
-    Returns: 
-      a boolean specifying if the fragment m_z can be explained from the formula and the adduct
-    Raise: 
-      a exception if fragment_mz or ppm are not numbers
+      Args:
+        self (Formula): formula to check if the fragment could be generated by this formula according to the substructure and the adduct. If the adduct has a number of charges > 1, it will check the adducts for double and single charge
+        fragment_mz (numeric): mz_mass to check if it can come from the structure
+        ppm (numeric): ppm of the reference monoisotopic mass to check the potential formulas
+      
+      Raise: 
+        A exception if fragment_mz or ppm are not numbers
+      
+      Returns: 
+        A boolean specifying if the fragment m_z can be explained from the formula and the adduct
     """
 
     mz = 200
@@ -512,14 +665,17 @@ class Formula:
   
   def percentage_intensity_fragments_explained_by_formula(self, fragments_mz_intensities: Dict[Union[float, int], Union[float, int]], ppm: Union[float, int] = __default_ppm):
     """
-    Args:
-      self (Formula): formula to check if the fragment could be generated by this formula according to the substructure and the adduct. If the adduct has a number of charges > 1, it will check the adducts for double and single charge
-      fragments_mz_intensities (dict[numeric,numeric]): dict containing fragments in the format m/z, intensity. 
-      ppm (numeric): ppm of the reference monoisotopic mass to check the potential formulas
-    Returns: 
-      the percentage of intensity of fragments explained according to the formula and adduct
-    Raise: 
-      a exception if fragment_mz or ppm are not numbers
+      Args:
+        self (Formula): formula to check if the fragment could be generated by this formula according to the substructure and the adduct. If the adduct has a number of charges > 1, it will check the adducts for double and single charge
+        fragments_mz_intensities (dict[numeric,numeric]): dict containing fragments in the format m/z, intensity. 
+        ppm (numeric): ppm of the reference monoisotopic mass to check the potential formulas
+      
+      Raise: 
+        a exception if fragment_mz or ppm are not numbers
+      
+      Returns: 
+        the percentage of intensity of fragments explained according to the formula and adduct
+      
     """
     
     total_fragment_intensities = sum(value for value in fragments_mz_intensities.values() if isinstance(value, (int, float)))

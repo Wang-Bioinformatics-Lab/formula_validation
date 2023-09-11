@@ -227,6 +227,21 @@ class TestFormula(unittest.TestCase):
     
     self.assertAlmostEqual(current_value, expected_value, delta=1e-2)
 
+  def test_formula_str(self):
+    expected_value = "C12H3N3O+[M+H-C2]+"
+    formula_1 = 'C12H3N3O'
+    adduct = '[M-C2+H]+'
+    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+    my_formula_1_str = str(my_formula_1)
+    self.assertEqual(my_formula_1_str,expected_value)
+
+  def test_final_formula_with_adduct(self):
+    expected_value = "[C10H4N3O]+"
+    formula_1 = 'C12H3N3O'
+    adduct = '[M-C2+H]+'
+    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+    my_formula_1_str = my_formula_1.get_final_formula_with_adduct()
+    self.assertEqual(my_formula_1_str,expected_value)
 
 if __name__ == "__main__":
   unittest.main()

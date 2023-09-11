@@ -34,12 +34,21 @@ import re
 class Adduct:
   """
   Methods:
+    get_multimer(self) -> int: Returns the number of multimers formed.
+    get_formula_str(self) -> str: Returns the formula string representing the adduct (elements to add and subtract).
+    get_formula_plus(self) -> 'Formula': Returns the Formula object representing the elements to add in the adduct.
+    get_formula_minus(self) -> 'Formula': Returns the Formula object representing the elements to subtract in the adduct.
+    get_adduct_mass(self) -> float: Returns the mass of the adduct.
+    get_adduct_charge(self) -> int: Returns the number of charges (an integer greater than 0).
+    get_adduct_charge_type(self) -> str: Returns the type of charge, either "+" or "-".
+    Private Methods:
 
-  constructor(adduct): string representing an adduct in the form '[M+CH3CN+H]+', '[M-3H2O+2H]2+' or '[5M+Ca]2+' where the charge is specified at the end . It should start with a [, then contain the multimer number followed by an M, then the adduct formula with a +-, the closing ], and the number of charges indicated by a number and the symbol +-
-  get_multimer(): number of multimers formed
-  get_adduct_mass(): mass of the adduct
-  get_adduct_charge(): number of charges, returns an integer > 0
-  get_adduct_charge_type(): type of charge (+ or -)
+    __init__(self, adduct: str): Constructor for the Adduct class, parses the input adduct string.
+    __eq__(self, other): Checks if two Adduct objects are equal.
+    __str__(self): Returns a string representation of the Adduct object.
+    __repr__(self): Returns a string representation of the Adduct object for debugging.
+    __hash__(self): Returns a hash value for the Adduct object.
+    __calculate_adduct_formula_to_add_and_subtract(self, adduct_formula: str) -> float: Calculates the formula to add and subtract elements based on the input adduct formula.
   """ 
   __electron_weight=0.00054858
 
@@ -80,7 +89,10 @@ class Adduct:
     return (self.__multimer == other.__multimer and self.__formula_plus == other.__formula_plus and self.__formula_minus == other.__formula_minus and self.__charge == other.__charge and self.__charge_type == other.__charge_type)
 
   def __str__(self):
-    return f"[{self.__multimer}M {self.get_formula_str()}]{self.__charge}{self.__charge_type}"
+    multimer = "" if self.__multimer == 1 else str(self.__multimer)
+    charge = "" if self.__charge == 1 else str(self.__charge)
+    
+    return f"[{multimer}M{self.get_formula_str()}]{charge}{self.__charge_type}"
 
   
   def __repr__(self):
