@@ -1,0 +1,33 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "formula_validation"
+version = "0.0.2"
+description = "Package to represent formulas with adducts and process ms data from it. "
+authors = ["Alberto Gil de la Fuente <alberto.gilf@gmail.com>"]
+maintainers = ["Alberto Gil de la Fuente <alberto.gilf@gmail.com>"]
+license = "GPL-3.0-only"
+readme = "README.md"
+homepage = "https://github.com/Wang-Bioinformatics-Lab/formula_validation"
+repository = "https://github.com/Wang-Bioinformatics-Lab/formula_validation"
+requires-python = ">=3.10"
+classifiers=[
+    'Development Status :: 3 - Alpha',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',  
+    'Operating System :: POSIX :: Linux',
+    'Programming Language :: Python :: 3.10',
+]
+keywords = ["ms", "chemistry"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+urllib3 = "^1.0"
+rpy2 = "^3.0"
+
+[project.urls]
+Documentation = "https://github.com/Wang-Bioinformatics-Lab/formula_validation/blob/main/README.md"
+
+
