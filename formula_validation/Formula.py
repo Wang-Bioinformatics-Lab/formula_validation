@@ -350,7 +350,7 @@ class Formula:
       if(response.status != 200):
         raise IncorrectFormula("The formula " + formula_str + " was not parseable to a correct formula")
       
-      data = response.json()
+      data = json.loads(response.data)
       
       mf_hill = data['mf']
       return Formula.formula_from_str_hill(mf_hill, adduct, metadata)
