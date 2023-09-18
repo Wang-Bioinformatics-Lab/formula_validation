@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "formula_validation"
-version = "0.0.3"
+version = "0.0.6"
 description = "Package to represent formulas with adducts and process ms data from it. "
 authors = ["Alberto Gil de la Fuente <alberto.gilf@gmail.com>"]
 maintainers = ["Alberto Gil de la Fuente <alberto.gilf@gmail.com>"]
@@ -23,7 +23,7 @@ classifiers=[
 keywords = ["ms", "chemistry"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">3.8"
 urllib3 = "^1.0"
 rpy2 = "^3.0"
 

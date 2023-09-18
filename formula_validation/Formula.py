@@ -116,7 +116,7 @@ class Formula:
         print("Error: Connection not established {}".format(error))
     
     from collections.abc import Iterable
-    from src.Adduct import Adduct
+    from formula_validation.Adduct import Adduct
     self.__elements={}
     if isinstance(elements, dict):
       for element, appearances in elements.items():
