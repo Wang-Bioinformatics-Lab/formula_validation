@@ -29,10 +29,10 @@ __author__    = "Alberto Gil de la Fuente"
 __copyright__   = "GPL License version 3"
 
 import unittest
-from src.Formula import Formula
-from src.Element import Element_type, element_weights
-from src.IncorrectFormula import IncorrectFormula
-from src.NotFoundElement import NotFoundElement
+from formula_validation.Formula import Formula
+from formula_validation.Element import Element_type, element_weights
+from formula_validation.IncorrectFormula import IncorrectFormula
+from formula_validation.NotFoundElement import NotFoundElement
 
 
 class TestFormula(unittest.TestCase):

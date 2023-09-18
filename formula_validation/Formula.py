@@ -40,9 +40,9 @@ from rpy2.robjects.packages import importr
 from rpy2.rinterface_lib.sexp import NULLType
 
 
-from src.Element import Element_type, element_weights
-from src.IncorrectFormula import IncorrectFormula
-from src.NotFoundElement import NotFoundElement
+from formula_validation.Element import Element_type, element_weights
+from formula_validation.IncorrectFormula import IncorrectFormula
+from formula_validation.NotFoundElement import NotFoundElement
 
 class Formula:
   __electron_weight=0.00054858

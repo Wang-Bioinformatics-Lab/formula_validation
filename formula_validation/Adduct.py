@@ -27,8 +27,8 @@ this Adduct class.
 """
 __author__      = "Alberto Gil de la Fuente"
 __copyright__   = "GPL License version 3"
-from src.IncorrectAdduct import IncorrectAdduct
-from src.Formula import Formula
+from formula_validation.IncorrectAdduct import IncorrectAdduct
+from formula_validation.Formula import Formula
 import re
 
 class Adduct:
