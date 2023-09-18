@@ -35,12 +35,14 @@ import urllib3
 import json
 import numpy as np
 
-from Element import Element_type, element_weights
-from IncorrectFormula import IncorrectFormula
-from NotFoundElement import NotFoundElement
 import rpy2.robjects as robjects
 from rpy2.robjects.packages import importr
 from rpy2.rinterface_lib.sexp import NULLType
+
+
+from src.Element import Element_type, element_weights
+from src.IncorrectFormula import IncorrectFormula
+from src.NotFoundElement import NotFoundElement
 
 class Formula:
   __electron_weight=0.00054858
@@ -114,10 +116,7 @@ class Formula:
         print("Error: Connection not established {}".format(error))
     
     from collections.abc import Iterable
-    from Adduct import Adduct
-    
-    self.metadata = metadata
-    
+    from src.Adduct import Adduct
     self.__elements={}
     if isinstance(elements, dict):
       for element, appearances in elements.items():

@@ -28,10 +28,11 @@ __author__    = "Alberto Gil de la Fuente"
 __copyright__   = "GPL License version 3"
 
 import unittest
-from Adduct import Adduct
-from Element import Element_type, element_weights
-from IncorrectFormula import IncorrectFormula
-from NotFoundElement import NotFoundElement
+from src.Adduct import Adduct
+from src.Element import Element_type, element_weights
+from src.IncorrectFormula import IncorrectFormula
+from src.IncorrectAdduct import IncorrectAdduct
+from src.NotFoundElement import NotFoundElement
 
 
 

@@ -29,10 +29,10 @@ __author__    = "Alberto Gil de la Fuente"
 __copyright__   = "GPL License version 3"
 
 import unittest
-from Formula import Formula
-from Element import Element_type, element_weights
-from IncorrectFormula import IncorrectFormula
-from NotFoundElement import NotFoundElement
+from src.Formula import Formula
+from src.Element import Element_type, element_weights
+from src.IncorrectFormula import IncorrectFormula
+from src.NotFoundElement import NotFoundElement
 
 
 class TestFormula(unittest.TestCase):
@@ -68,8 +68,8 @@ class TestFormula(unittest.TestCase):
     my_elements = {Element_type.C: 5, Element_type.H: 5, Element_type.N: 4}
     adduct = '[M+C2H2O-H]-'
     my_formula = Formula(my_elements, adduct)
-    expected_monoisotopic_mass = 121.05142
-    formula_monoisotopic_mass = my_formula.get_monoisotopic_mass()
+    expected_monoisotopic_mass = 122.05862
+    formula_monoisotopic_mass = my_formula.get_monoisotopic_mass_with_adduct()
     self.assertAlmostEqual(expected_monoisotopic_mass, formula_monoisotopic_mass, delta=1e-4)
 
   def test_formula_from_str_plain(self):
