@@ -30,7 +30,14 @@ To use this module, you'll need Python 3.x and the required dependencies. You ca
 
 ```bash
 pip install rdkit urllib3 rpy2
+```
+You should have R installed with the package devtools and 
+```R
+install.packages("devtools")
+devtools::install_github("mjhelf/MassTools")
 
+library(MassTools)
+```
 ## Usage
 
 ### Creating Formula Objects
@@ -89,3 +96,4 @@ print(f"Mass of formula2 with adduct: {mass2}")
 # Check mass against an external mass with a tolerance of 5 ppm
 check_monoisotopic_mass = formula1.check_monoisotopic_mass(121.05142,5)
 check_monoisotopic_mass_with_adduct = formula1.check_monoisotopic_mass_with_adduct(122.05862,5)
+```

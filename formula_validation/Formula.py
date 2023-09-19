@@ -35,10 +35,6 @@ import urllib3
 import json
 import numpy as np
 
-import rpy2.robjects as robjects
-from rpy2.robjects.packages import importr
-from rpy2.rinterface_lib.sexp import NULLType
-
 
 from formula_validation.Element import Element_type, element_weights
 from formula_validation.IncorrectFormula import IncorrectFormula
@@ -52,7 +48,6 @@ class Formula:
   
   __default_ppm = 50
 
-  robjects.r('''library(MassTools)''')
 
   """
   Methods:
@@ -580,6 +575,12 @@ class Formula:
       Returns: 
         A boolean specifying if the fragment m_z can be explained from the formula and the adduct
     """
+
+    import rpy2.robjects as robjects
+    from rpy2.robjects.packages import importr
+    from rpy2.rinterface_lib.sexp import NULLType
+
+    robjects.r('''library(MassTools)''')
 
     mz = 200
     charge = 1
