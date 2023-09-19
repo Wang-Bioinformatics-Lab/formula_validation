@@ -115,6 +115,8 @@ class Formula:
       except Exception as error:
         print("Error: Connection not established {}".format(error))
     
+    self.metadata = metadata
+    
     from collections.abc import Iterable
     from formula_validation.Adduct import Adduct
     self.__elements={}
