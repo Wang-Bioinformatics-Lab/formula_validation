@@ -188,10 +188,11 @@ class Formula:
     """
     if self.__adduct is None:
       return str(self)
-    elif self.__adduct.get_adduct_charge() == 0:
+    final_formula = self * self.__adduct.get_multimer()
+    if self.__adduct.get_adduct_charge() == 0:
       formula_plus = self.__adduct.get_formula_plus()
       formula_minus = self.__adduct.get_formula_minus()
-      final_formula = self+formula_plus
+      final_formula = final_formula+formula_plus
       final_formula = final_formula-formula_minus
       return str(final_formula)
     else:
@@ -199,7 +200,7 @@ class Formula:
       charge_type = self.__adduct.get_adduct_charge_type()
       formula_plus = self.__adduct.get_formula_plus()
       formula_minus = self.__adduct.get_formula_minus()
-      final_formula = self+formula_plus
+      final_formula = final_formula+formula_plus
       final_formula = final_formula-formula_minus
       str_final_formula="[" + str(final_formula) + "]" + charge + charge_type
       return str_final_formula
