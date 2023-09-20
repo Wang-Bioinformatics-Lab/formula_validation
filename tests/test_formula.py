@@ -243,5 +243,21 @@ class TestFormula(unittest.TestCase):
     my_formula_1_str = my_formula_1.get_final_formula_with_adduct()
     self.assertEqual(my_formula_1_str,expected_value)
 
+  def test_final_formula_with_no_adduct(self):
+    expected_value = "C5H4O4"
+    formula_1 = 'C5H4O4'
+    adduct = None
+    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+    my_formula_1_str = my_formula_1.get_final_formula_with_adduct()
+    self.assertEqual(my_formula_1_str,expected_value)
+
+  def test_final_formula_with_adduct_neutral(self):
+    expected_value = "C5H4O4Na"
+    formula_1 = 'C5H5O4'
+    adduct = '[M-H+Na]'
+    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+    my_formula_1_str = my_formula_1.get_final_formula_with_adduct()
+    self.assertEqual(my_formula_1_str,expected_value)
+
 if __name__ == "__main__":
   unittest.main()

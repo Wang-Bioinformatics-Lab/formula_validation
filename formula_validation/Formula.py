@@ -186,14 +186,23 @@ class Formula:
       Returns:
         str: A string representation of the Formula object (C12H3N3O+[M-H2O+H]+) in the format '[C12H2N3]+'
     """
-    charge = "" if self.__adduct.get_adduct_charge() == 1 else str(self.__adduct.get_adduct_charge())
-    charge_type = self.__adduct.get_adduct_charge_type()
-    formula_plus = self.__adduct.get_formula_plus()
-    formula_minus = self.__adduct.get_formula_minus()
-    final_formula = self+formula_plus
-    final_formula = final_formula-formula_minus
-    str_final_formula="[" + str(final_formula) + "]" + charge + charge_type
-    return str_final_formula
+    if self.__adduct is None:
+      return str(self)
+    elif self.__adduct.get_adduct_charge() == 0:
+      formula_plus = self.__adduct.get_formula_plus()
+      formula_minus = self.__adduct.get_formula_minus()
+      final_formula = self+formula_plus
+      final_formula = final_formula-formula_minus
+      return str(final_formula)
+    else:
+      charge = "" if self.__adduct.get_adduct_charge() == 1 else str(self.__adduct.get_adduct_charge())
+      charge_type = self.__adduct.get_adduct_charge_type()
+      formula_plus = self.__adduct.get_formula_plus()
+      formula_minus = self.__adduct.get_formula_minus()
+      final_formula = self+formula_plus
+      final_formula = final_formula-formula_minus
+      str_final_formula="[" + str(final_formula) + "]" + charge + charge_type
+      return str_final_formula
     
 
   def __repr__(self):
@@ -463,8 +472,8 @@ class Formula:
     
     monoisotopic_mass_with_adduct += electrons_weight
     monoisotopic_mass_with_adduct += self.__adduct.get_adduct_mass()
-
-    monoisotopic_mass_with_adduct = monoisotopic_mass_with_adduct / self.__adduct.get_adduct_charge()
+    adduct_charge_to_divide = self.__adduct.get_adduct_charge() if self.__adduct.get_adduct_charge() != 0 else 1
+    monoisotopic_mass_with_adduct = monoisotopic_mass_with_adduct / adduct_charge_to_divide
     
     return monoisotopic_mass_with_adduct
 
