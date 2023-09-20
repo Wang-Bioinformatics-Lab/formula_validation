@@ -96,7 +96,7 @@ class Adduct:
 
   def __str__(self):
     multimer = "" if self.__multimer == 1 else str(self.__multimer)
-    charge = "" if self.__charge == 1 else str(self.__charge)
+    charge = "" if self.__charge in(0,1) else str(self.__charge)
     
     return f"[{multimer}M{self.get_formula_str()}]{charge}{self.__charge_type}"
 
