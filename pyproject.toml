@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "formula_validation"
-version = "0.0.7"
+version = "0.0.8"
 description = "Package to represent formulas with adducts and process ms data from it. "
 authors = ["Alberto Gil de la Fuente <alberto.gilf@gmail.com>"]
 maintainers = ["Alberto Gil de la Fuente <alberto.gilf@gmail.com>"]
