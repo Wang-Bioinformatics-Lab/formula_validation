@@ -69,7 +69,7 @@ class Adduct:
         IncorrectAdduct: if the adduct does not follow the format specified
     """
     
-    pattern = r'\[(\d)*M([\+-].*?)\](\d)*([\+-])'
+    pattern = r'\[(\d)*M([\+-].*?)\](\d)*([\+-])?'
 
     match = re.match(pattern, adduct)
     if match:
@@ -78,8 +78,14 @@ class Adduct:
         
         # self.__formula_plus, self.__formula_minus, self.__adduct_mass. One or both of them will be None if they dont apply or if adduct is [xM], [xM]+ or [xM]- being x an integer > 1
         self.__formula_plus, self.__formula_minus, self.__adduct_mass = self.__calculate_adduct_formula_to_add_and_subtract(self.__original_formula)
-        self.__charge = int(match.group(3).strip()) if match.group(3) is not None else 1
-        self.__charge_type = match.group(4).strip() 
+        
+        if match.group(4) is not None:
+          self.__charge = int(match.group(3).strip()) if match.group(3) is not None else 1
+          self.__charge_type = match.group(4).strip() 
+        else:
+          self.__charge = 0
+          self.__charge_type = ""
+
     else:
         raise IncorrectAdduct(adduct)
     

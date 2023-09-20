@@ -86,6 +86,15 @@ class TestAdduct(unittest.TestCase):
     self.assertEqual(adduct_1.get_multimer(), 1)
     self.assertAlmostEqual(adduct_1.get_adduct_mass(), 36.94806, delta=1e-3)
 
+  def test_adduct_m_minus2HPlusK_neutral(self):
+    adduct_str1 = '[M-2H+K]'
+    adduct_1 =Adduct(adduct_str1)
+    self.assertEqual(adduct_1.get_adduct_charge(), 0)
+    self.assertEqual(adduct_1.get_adduct_charge_type(), '')
+    self.assertEqual(adduct_1.get_multimer(), 1)
+    self.assertAlmostEqual(adduct_1.get_adduct_mass(), 36.94806, delta=1e-3)
+
+
    
 
 if __name__ == "__main__":
