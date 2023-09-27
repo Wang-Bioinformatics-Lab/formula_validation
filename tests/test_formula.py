@@ -123,7 +123,7 @@ class TestFormula(unittest.TestCase):
     external_mass=455.24
     current_value = my_formula.check_monoisotopic_mass(external_mass,50)
     self.assertAlmostEqual(current_value, expected_value, delta=1e-3)
-
+  
 
   def test_monoisotopic_mass_with_adduct(self):
     smiles_1 = 'CCCCCCC[C@@H](C/C=C/CCC(=O)NC/C(=C/Cl)/[C@@]12[C@@H](O1)[C@H](CCC2=O)O)OC'
@@ -132,7 +132,7 @@ class TestFormula(unittest.TestCase):
     expected_value =496.24713858
     current_value = my_formula.get_monoisotopic_mass_with_adduct()
     self.assertAlmostEqual(current_value, expected_value, delta=1e-3)
-
+  
   def test_monoisotopic_mass_with_adduct_2(self):
     smiles_1 = 'CCCCCCC[C@@H](C/C=C/CCC(=O)NC/C(=C/Cl)/[C@@]12[C@@H](O1)[C@H](CCC2=O)O)OC'
     adduct = '[M-2H2O+2H]2+' 
@@ -266,6 +266,74 @@ class TestFormula(unittest.TestCase):
     my_formula_1 = Formula.formula_from_str(formula_1, adduct)
     my_formula_1_str = my_formula_1.get_final_formula_with_adduct()
     self.assertEqual(my_formula_1_str,expected_value)
+  
+  
+  def test_natively_pos_charged_molecule(self):
+    expected_value = "C10H9O8+"
+    formula_1 = 'C10H9O8+'
+    adduct = 'None'
+    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+    my_formula_1_str = my_formula_1.get_final_formula_with_adduct()
+    self.assertEqual(my_formula_1_str,expected_value)
 
+  def test_natively_pos_charged_molecule_mass(self):
+    expected_value = 257.02919
+    formula_1 = 'C10H9O8+'
+    adduct = 'None'
+    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+    mz = my_formula_1.get_monoisotopic_mass_with_adduct()
+    self.assertAlmostEqual(mz,expected_value, delta=1e-3)
+
+
+  def test_natively_neg_charged_molecule(self):
+    expected_value = "C10H9O8-"
+    formula_1 = 'C10H9O8-'
+    adduct = 'None'
+    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+    my_formula_1_str = my_formula_1.get_final_formula_with_adduct()
+    self.assertEqual(my_formula_1_str,expected_value)
+  
+  def test_natively_neg_charged_molecule_mass(self):
+    expected_value = 257.03029
+    formula_1 = 'C10H9O8-'
+    adduct = 'None'
+    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+    mz = my_formula_1.get_monoisotopic_mass_with_adduct()
+    self.assertAlmostEqual(mz,expected_value, delta=1e-3)
+  
+  def test_natively_pos_charged_molecule_with_neutral_adduct(self):
+    expected_value = "C20H17O16Na+"
+    formula_1 = 'C10H9O8+'
+    adduct = '[2M-H+Na]'
+    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+    my_formula_1_str = my_formula_1.get_final_formula_with_adduct()
+    self.assertEqual(my_formula_1_str,expected_value)
+
+  def test_natively_pos_charged_molecule_with_neutral_adduct_mass(self):
+    expected_value = 536.04088
+    formula_1 = 'C10H9O8+'
+    adduct = '[2M-H+Na]'
+    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+    mz = my_formula_1.get_monoisotopic_mass_with_adduct()
+    self.assertAlmostEqual(mz,expected_value, delta=1e-3)
+
+  def test_natively_pos_charged_molecule_with_charged_adduct(self):
+    expected_value = "[C20H18O16Na]+2"
+    formula_1 = 'C10H9O8+'
+    adduct = '[2M+Na]+'
+    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+    my_formula_1_str = my_formula_1.get_final_formula_with_adduct()
+    self.assertEqual(my_formula_1_str,expected_value)
+  
+  def test_natively_pos_charged_molecule_with_charged_adduct_mass(self):
+    expected_value = 268.52408
+    formula_1 = 'C10H9O8+'
+    adduct = '[2M+Na]+'
+    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
+    mz = my_formula_1.get_monoisotopic_mass_with_adduct()
+    self.assertAlmostEqual(mz,expected_value, delta=1e-3)
+
+  
+  
 if __name__ == "__main__":
   unittest.main()

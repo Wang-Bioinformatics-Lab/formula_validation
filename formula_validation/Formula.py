@@ -11,7 +11,7 @@ this Formula class. It uses all the chemcalc features to process complex molecul
 @file :  Formula.py
 @author :  Alberto Gil De la Fuente (alberto.gilf@gmail.com)
 
-@version :  0.0.1, 20 July 2023
+@version :  0.0.2, 27 September 2023
 @information :  The Zen of Python
           https://www.python.org/dev/peps/pep-0020/
         Style Guide for Python Code
@@ -56,7 +56,7 @@ class Formula:
       formula_from_str(formula_str: str, adduct: str) -> 'Formula'
       formula_from_smiles(smiles: str, adduct: str) -> 'Formula'
       formula_from_inchi(inchi: str, adduct: str) -> 'Formula'
-      __init__(self, elements: Dict[Union['Element_type',str], int], adduct: Union['Adduct', str]): Initializes a Formula object with a dictionary of chemical elements and an optional adduct.
+      __init__(self, elements: Dict[Union['Element_type',str], int], adduct: Union['Adduct', str], charge: int = 0, charge_type: str='', metadata: Dict=None): Initializes a Formula object with a dictionary of chemical elements and an optional adduct.
     Comparison and Representation
       __eq__(self, other): Checks if two Formula objects are equal.
       __str__(self): Returns a string representation of the Formula object.
@@ -87,7 +87,7 @@ class Formula:
     Defines static methods to create Formula objects from different notations (Hill, SMILES, InChI).
 """
   
-  def __init__(self, elements: Dict[Union['Element_type',str], int], adduct: Union['Adduct', str], metadata: Dict=None):
+  def __init__(self, elements: Dict[Union['Element_type',str], int], adduct: Union['Adduct', str], charge: int = 0, charge_type: str='', metadata: Dict=None):
     """
     Constructor for the Formula class.
     Args:
@@ -114,6 +114,7 @@ class Formula:
     
     from collections.abc import Iterable
     from formula_validation.Adduct import Adduct
+
     self.__elements={}
     if isinstance(elements, dict):
       for element, appearances in elements.items():
@@ -133,7 +134,14 @@ class Formula:
           raise IncorrectFormula(elements)
     else:
       raise IncorrectFormula(elements)
-    self.__monoisotopic_mass = self.__calculate_monoisotopic_mass()
+    self.__charge = charge
+    
+    if charge_type in ('','+','-'):
+      self.__charge_type = charge_type
+      self.__monoisotopic_mass = self.__calculate_monoisotopic_mass()
+    else:
+      raise IncorrectFormula("charge_type " + charge_type +  " invalid. It should be +, - or empty")
+    
     
     if adduct is None:
       self.__adduct=None
@@ -161,7 +169,7 @@ class Formula:
         bool: True if the two Formula objects are equal, otherwise False.
     """
     if isinstance(other, Formula):
-      return self.__elements == other.get_elements()
+      return self.__elements == other.get_elements() and self.__adduct == other.__adduct
     else:
       return False
     
@@ -173,11 +181,14 @@ class Formula:
       Returns:
         str: A string representation of the Formula object in the format 'C4H5N6Na+[M+H]+'
     """
-    result_string = "".join( str(key.name) + (str(value) if value > 1 else "") for key,value in self.__elements.items())
+    formula_string = "".join( str(key.name) + (str(value) if value > 1 else "") for key,value in self.__elements.items())
+    if self.__charge_type != '':
+      charge_str = '' if self.__charge == 1 else str(self.__charge)
+      formula_string = formula_string + self.__charge_type + charge_str
     adduct_str = "" if self.__adduct == None else "+" + str(self.__adduct)
 
-    result_string = result_string + adduct_str
-    return result_string
+    formula_string = formula_string + adduct_str
+    return formula_string
   
   def get_final_formula_with_adduct(self) -> float:
     """
@@ -196,14 +207,37 @@ class Formula:
       final_formula = final_formula-formula_minus
       return str(final_formula)
     else:
-      charge = "" if self.__adduct.get_adduct_charge() == 1 else str(self.__adduct.get_adduct_charge())
-      charge_type = self.__adduct.get_adduct_charge_type()
+      if self.__charge_type == '+':
+        own_charge = self.__charge 
+      elif self.__charge_type == '-':
+        own_charge = -self.__charge 
+      else:
+        own_charge = 0
+      if self.__adduct.get_adduct_charge_type() == '+':
+        adduct_charge = self.__adduct.get_adduct_charge() 
+      elif self.__adduct.get_adduct_charge_type() == '-':
+        adduct_charge = -self.__adduct.get_adduct_charge() 
+      final_charge = own_charge + adduct_charge
+      
+      if final_charge == 0:
+        return "".join( str(key.name) + (str(value) if value > 1 else "") for key,value in final_formula.get_elements().items())
+      elif final_charge == 1:
+        final_charge_str = "+" 
+      elif final_charge > 1:
+        final_charge_str = "+" + str(final_charge) 
+      elif final_charge == -1:
+        final_charge_str = "-" 
+      else:
+        final_charge_str = "-" + str(final_charge) 
+            
       formula_plus = self.__adduct.get_formula_plus()
       formula_minus = self.__adduct.get_formula_minus()
       final_formula = final_formula+formula_plus
       final_formula = final_formula-formula_minus
-      str_final_formula="[" + str(final_formula) + "]" + charge + charge_type
-      return str_final_formula
+      
+      formula_string = "".join( str(key.name) + (str(value) if value > 1 else "") for key,value in final_formula.get_elements().items())
+      formula_string = "[" + formula_string + "]" + final_charge_str
+      return formula_string
     
 
   def __repr__(self):
@@ -230,7 +264,15 @@ class Formula:
       new_formula_dict = copy.deepcopy(self.__elements)
       for element,counts_in_other in other.__elements.items():
         new_formula_dict[element] = new_formula_dict.get(element,0) + counts_in_other
-      return Formula(new_formula_dict, None)
+      charge = -self.__charge if self.__charge_type == '-' else self.__charge
+      charge = charge-other.__charge if other.__charge_type == '-' else charge+other.__charge
+      if charge == 0:
+        charge_type =''
+      elif charge > 0:
+        charge_type ='+'
+      else: 
+        charge_type ='-'
+      return Formula(new_formula_dict, None, charge, charge_type)
     else:
         raise IncorrectFormula("other should be a formula and is a " + str(type(other)))
     
@@ -262,7 +304,17 @@ class Formula:
           raise IncorrectFormula("The subtraction of these two formulas contain a negative number of {element}")  
       for element_to_remove in elements_to_remove:
         del new_formula_dict[element_to_remove]
-      return Formula(new_formula_dict, None)
+      
+      charge = -self.__charge if self.__charge_type == '-' else self.__charge
+      charge = charge+other.__charge if other.__charge_type == '-' else charge-other.__charge
+      if charge == 0:
+        charge_type =''
+      elif charge > 0:
+        charge_type ='+'
+      else: 
+        charge_type ='-'
+      return Formula(new_formula_dict, None, charge, charge_type)
+    
       
     else:
         raise IncorrectFormula("other should be a formula and is a " + str(type(other)))
@@ -285,7 +337,7 @@ class Formula:
       new_formula_dict = copy.deepcopy(self.__elements)
       for element,counts_in_other in self.__elements.items():
         new_formula_dict[element] = new_formula_dict.get(element,0) * num_to_multiply
-      return Formula(new_formula_dict, self.__adduct)
+      return Formula(new_formula_dict, self.__adduct, self.__charge, self.__charge_type)
     else:
         raise IncorrectFormula("other should be a formula and is a " + str(type(Formula)))
     
@@ -295,7 +347,7 @@ class Formula:
       Static method to create a Formula object from a chemical formula string in Hill notation.
 
       Args:
-        formula_str (str): A string representing a molecular formula in Hill notation. Example: 'C4H5N6Na'.
+        formula_str (str): A string representing a molecular formula in Hill notation. Example: 'C4H5N6Na'. Other example 'C4H5N6Na+'
         adduct (str): A string representing an adduct in the form '[M+C2H2O-H]-', '[M-3H2O+2H]2+' or '[5M+Ca]2+' where the charge is specified at the end.
         metadata (dict): Optional argument to include a dict of metadata, defaults to None.
 
@@ -306,21 +358,34 @@ class Formula:
         IncorrectFormula: If the number of appearances is <=0 or if the formula contains elements that are not valid chemical elements.
     """
     import re
+    
     if re.search(r'(?<![A-Z])[a-z]', formula_str):
       raise IncorrectFormula("The formula contains elements that are not chemical Elements")
     # check for any character that is not a capital letter, a lowercase letter, or a number
-    if re.search(r'[^a-zA-Z0-9]', formula_str):
-      
+    if re.search(r'[^a-zA-Z0-9+-]', formula_str):
       raise IncorrectFormula("The formula contains parenthesis or brackets")
 
+    #pattern = r'([A-Z][a-z]*)(\d*)([+-]?)(\d*)?'
     pattern = r'([A-Z][a-z]*)(\d*)'
     elements = {}
     
     for element, appearances in re.findall(pattern, formula_str):
       appearances = int(appearances) if appearances else 1
       elements[element] = elements.get(element, 0) + appearances
-      
-    return Formula(elements, adduct, metadata=metadata)
+    
+    charge_pattern = r'([-+]\d*)$'
+    charge_match = re.search(charge_pattern, formula_str)
+
+    if charge_match:
+      charge_type = charge_match.group(1)[0]  # Capture the '+' or '-' symbol
+      charge_value = charge_match.group(1)[1:]  # Capture the numeric part of the charge
+      # If charge_value is empty, set charge to 1; otherwise, convert it to an integer
+      charge = 1 if not charge_value else int(charge_value)
+    else:
+      charge = 0
+      charge_type = ''
+
+    return Formula(elements, adduct, charge, charge_type, metadata=metadata)
   
   @staticmethod
   def formula_from_str(formula_str: str, adduct: str, no_api: bool=False, metadata: bool=None) -> 'Formula':
@@ -437,6 +502,20 @@ class Formula:
     monoisotopic_mass = 0
     for element, appearances in self.__elements.items():
       monoisotopic_mass += element_weights[element] * appearances
+
+    if self.__charge_type=='+':
+      electrons_weight = -Formula.__electron_weight*self.__charge
+    elif self.__charge_type=='-':
+      electrons_weight = Formula.__electron_weight*self.__charge
+    elif self.__charge_type=='':
+      electrons_weight = 0
+    else:
+      raise IncorrectFormula("The formula contains a wrong charge type")
+    
+    monoisotopic_mass += electrons_weight
+    adduct_charge_to_divide = self.__charge if self.__charge != 0 else 1
+    monoisotopic_mass = monoisotopic_mass / adduct_charge_to_divide
+
     return monoisotopic_mass
         
   def get_monoisotopic_mass(self) -> float:
@@ -459,22 +538,53 @@ class Formula:
     monoisotopic_mass_with_adduct= self.get_monoisotopic_mass()
     if self.__adduct == None:
       return monoisotopic_mass_with_adduct
-    if self.__adduct.get_multimer()>1:
-      monoisotopic_mass_with_adduct = monoisotopic_mass_with_adduct * self.__adduct.get_multimer()
-
+    
+    partial_elements = {element: count * self.__adduct.get_multimer() for element, count in self.__elements.items()}
+    if self.__charge_type=='+':
+        partial_charge = self.__charge
+    else:
+      partial_charge = -self.__charge 
+    
     if self.__adduct.get_adduct_charge_type()=='+':
-      electrons_weight = -Formula.__electron_weight*self.__adduct.get_adduct_charge()
+      final_charge=partial_charge+self.__adduct.get_adduct_charge()
     elif self.__adduct.get_adduct_charge_type()=='-':
-      electrons_weight = Formula.__electron_weight*self.__adduct.get_adduct_charge()
+      final_charge=partial_charge-self.__adduct.get_adduct_charge()
     elif self.__adduct.get_adduct_charge_type()=='':
-      electrons_weight = 0
+      final_charge = partial_charge
     else:
       raise IncorrectFormula("The formula contains a wrong adduct")
     
+    # Calculate the final number of elements with the multimers and the adduct
+    monoisotopic_mass_with_adduct = 0
+    formula_plus = self.__adduct.get_formula_plus()
+    formula_minus = self.__adduct.get_formula_minus()
+    
+    for element, appearances in formula_plus.get_elements().items():
+      if element in partial_elements:
+        partial_elements[element] +=  appearances 
+      else:
+        partial_elements[element] =  appearances 
+    
+    for element, appearances in formula_minus.get_elements().items():
+      if element in partial_elements:
+        partial_elements[element] -= appearances 
+      else:
+        partial_elements[element] = appearances 
+      if(partial_elements[element] < 0):
+        raise IncorrectFormula("The formula contains a wrong adduct because the element " + str(element) + " is negative " + str(partial_elements[element]))
+
+    for element, appearances in partial_elements.items():
+      monoisotopic_mass_with_adduct += element_weights[element] * appearances
+    
+
+    if final_charge != 0:
+      electrons_weight = -Formula.__electron_weight*final_charge
+    else:
+      electrons_weight = 0
+    
     monoisotopic_mass_with_adduct += electrons_weight
-    monoisotopic_mass_with_adduct += self.__adduct.get_adduct_mass()
-    adduct_charge_to_divide = self.__adduct.get_adduct_charge() if self.__adduct.get_adduct_charge() != 0 else 1
-    monoisotopic_mass_with_adduct = monoisotopic_mass_with_adduct / adduct_charge_to_divide
+    adduct_charge_to_divide = final_charge if final_charge != 0 else 1
+    monoisotopic_mass_with_adduct = monoisotopic_mass_with_adduct / abs(adduct_charge_to_divide)
     
     return monoisotopic_mass_with_adduct
 
@@ -539,7 +649,7 @@ class Formula:
     """
     return Formula.absolute_to_ppm(self.get_monoisotopic_mass_with_adduct(), reference_monoisotopic_mass)
 
-  
+  @staticmethod
   def absolute_to_ppm(reference_monoisotopic_mass: Union[float,int], mass_to_compare: Union[float,int]) -> float:
     """
       Args:
@@ -557,7 +667,7 @@ class Formula:
     ppm_diff = abs((reference_monoisotopic_mass - mass_to_compare) / reference_monoisotopic_mass) * 1000000.0
     return ppm_diff
 
-
+  @staticmethod
   def ppm_to_absolute(reference_monoisotopic_mass: Union[float,int], ppm: Union[float,int] = __default_ppm) -> float:
     """
       Args:
@@ -597,12 +707,14 @@ class Formula:
     
     top = 5
     final_formula = self
+    final_charge = - self.__charge if self.__charge_type=='-' else self.__charge
     if self.__adduct is not None:
-      charge= self.__adduct.get_adduct_charge()
+      final_charge= final_charge + self.__adduct.get_adduct_charge() if self.__adduct.get_adduct_charge_type() =='+' else final_charge - self.__adduct.get_adduct_charge()
       final_formula = final_formula + self.__adduct.get_formula_plus() if self.__adduct.get_formula_plus() is not None else final_formula
       final_formula = final_formula - self.__adduct.get_formula_minus() if self.__adduct.get_formula_minus() is not None else final_formula
     elements = {key: value for key, value in final_formula.get_elements().items() if value > 0}
     
+
     min_elements = "".join([f"{element.name}0" for element, count in elements.items()])
     max_elements = "".join([f"{element.name}{count}" for element, count in elements.items()])
     
@@ -634,7 +746,7 @@ class Formula:
 
     # Run the R code in Python
     robjects.r('mz <- {}'.format(fragment_mz))
-    robjects.r('z <- {}'.format(charge))
+    robjects.r('z <- {}'.format(final_charge))
     robjects.r('ppm <- {}'.format(ppm))
     robjects.r('top <- {}'.format(top))
     robjects.r('mfs <- calcMF(mz = mz, z = z, ppm = ppm, top = top, elements = elements, Filters = {})'.format(filter_r_code))
@@ -670,3 +782,11 @@ class Formula:
       if self.check_possible_fragment_mz(mz,ppm):
         explained_intensities +=intensity
     return explained_intensities / total_fragment_intensities
+
+
+if __name__ == '__main__':
+  smiles_1 = 'CCCCCCC[C@@H](C/C=C/CCC(=O)NC/C(=C/Cl)/[C@@]12[C@@H](O1)[C@H](CCC2=O)O)OC'
+  adduct = '[M+C2H2O-H]-' 
+  my_formula = Formula.formula_from_smiles(smiles_1, adduct)
+  expected_value =496.24713858
+  current_value = my_formula.get_monoisotopic_mass_with_adduct()
