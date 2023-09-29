@@ -359,13 +359,11 @@ class Formula:
     """
     import re
     
-    if re.search(r'(?<![A-Z])[a-z]', formula_str):
-      raise IncorrectFormula("The formula contains elements that are not chemical Elements")
-    # check for any character that is not a capital letter, a lowercase letter, or a number
-    if re.search(r'[^a-zA-Z0-9+-]', formula_str):
-      raise IncorrectFormula("The formula contains parenthesis or brackets")
+    # Check the pattern of the formulas for chemical elements and potentially a charge
+    if not re.search(r'^[a-zA-Z0-9]+(\(?([\+-])\d*\)?)?$', formula_str):
+      raise IncorrectFormula("The formula does not follow the hill standards")
 
-    #pattern = r'([A-Z][a-z]*)(\d*)([+-]?)(\d*)?'
+
     pattern = r'([A-Z][a-z]*)(\d*)'
     elements = {}
     
@@ -373,7 +371,7 @@ class Formula:
       appearances = int(appearances) if appearances else 1
       elements[element] = elements.get(element, 0) + appearances
     
-    charge_pattern = r'([-+]\d*)$'
+    charge_pattern = r'\(?([-+]\d*)\)?$'
     charge_match = re.search(charge_pattern, formula_str)
 
     if charge_match:

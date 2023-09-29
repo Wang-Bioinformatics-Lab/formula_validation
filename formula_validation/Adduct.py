@@ -70,8 +70,9 @@ class Adduct:
     """
     
     pattern = r'\[(\d)*M([\+-].*?)\](\d)*([\+-])?'
-
+    pattern__natively_charged = r'\[(\d)*M([\+-].*?)?\](\d)*([\+-])?'
     match = re.match(pattern, adduct)
+    match_natively_charged = re.match(pattern__natively_charged, adduct)
     if match:
         self.__multimer = int(match.group(1).strip()) if match.group(1) is not None else 1
         self.__original_formula = match.group(2).strip()
@@ -85,7 +86,13 @@ class Adduct:
         else:
           self.__charge = 0
           self.__charge_type = ""
-
+    elif match_natively_charged:
+      self.__multimer = int(match_natively_charged.group(1).strip()) if match_natively_charged.group(1) is not None else 1
+      self.__formula_plus=Formula({},'None')
+      self.__formula_minus=Formula({},'None')
+      self.__adduct_mass = 0
+      self.__charge = 0
+      self.__charge_type = ""
     else:
         raise IncorrectAdduct(adduct)
     
