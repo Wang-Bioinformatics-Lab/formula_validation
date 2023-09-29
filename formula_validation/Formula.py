@@ -359,10 +359,12 @@ class Formula:
     """
     import re
     
+    formula_str = formula_str.replace(' ','')
+    
     if re.search(r'(?<![A-Z])[a-z]', formula_str):
       raise IncorrectFormula("The formula contains elements that are not chemical Elements")
     # check for any character that is not a capital letter, a lowercase letter, or a number
-    if re.search(r'[^a-zA-Z0-9+-]', formula_str):
+    if not re.search(r'^[a-zA-Z0-9*\+\-]+$', formula_str):
       raise IncorrectFormula("The formula contains parenthesis or brackets")
 
     #pattern = r'([A-Z][a-z]*)(\d*)([+-]?)(\d*)?'
