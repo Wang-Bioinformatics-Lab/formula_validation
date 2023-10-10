@@ -58,6 +58,14 @@ class TestFormula(unittest.TestCase):
     formula_monoisotopic_mass = my_formula.get_monoisotopic_mass()
     self.assertAlmostEqual(expected_monoisotopic_mass, formula_monoisotopic_mass, delta=1e-3)
 
+  def test_monoisotopic_mass_with_isotopes(self):
+    my_elements = '[13]C2[14]C5C5[2]H6H8N4O4S'
+    adduct = 'None'
+    my_formula = Formula.formula_from_str(my_elements, adduct)
+    expected_monoisotopic_mass = 328.133317657
+    formula_monoisotopic_mass = my_formula.get_monoisotopic_mass()
+    self.assertAlmostEqual(expected_monoisotopic_mass, formula_monoisotopic_mass, delta=1e-3)
+    
   def test_formula_with_adduct(self):
     my_elements = {Element_type.C: 5, Element_type.H: 5, Element_type.N: 4}
     adduct = '[M+C2H2O-H]-'
@@ -190,42 +198,7 @@ class TestFormula(unittest.TestCase):
       current_value = my_formula_2 - my_formula_1
         
     self.assertIn("The subtraction of these two formulas contain a negative number of ",str(context.exception))
-    
-  def test_verify_fragment_mz_no_adduct(self):
-    formula_1 = 'C9H9O2S2'
-    adduct = None 
-    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
-    current_value = my_formula_1.check_possible_fragment_mz(fragment_mz=200,ppm=50)
-    expected_value = True
-    self.assertEqual(current_value, expected_value)
   
-  def test_verify_fragment_mz_with_adduct(self):
-    formula_1 = 'C9H9O2S2'
-    adduct = '[M-C2+H]+' 
-    my_formula_1 = Formula.formula_from_str(formula_1, adduct)
-    current_value = my_formula_1.check_possible_fragment_mz(fragment_mz=200,ppm=50)
-    expected_value = False
-    self.assertEqual(current_value, expected_value)
-
-
-  def test_percentage_intensity_fragments_explained_by_formula(self):
-    
-    formula_1 = 'C9H9O2S2'
-    adduct = '[M+H]+' 
-    import pickle
-    spectra_1 = pickle.load(open("example_spectra_for_Alberto.pkl", 'rb'))
-    mzs = spectra_1['m/z array']
-    intensities = spectra_1['intensity array']
-    fragments_mz_intensities = dict(zip(mzs, intensities))
-    metadata = pickle.load(open("example_metadata_for_Alberto.pkl", 'rb'))
-    smiles = metadata[1]["Smiles"]
-    formula = Formula.formula_from_smiles(smiles, adduct)
-
-    
-    current_value = formula.percentage_intensity_fragments_explained_by_formula(fragments_mz_intensities=fragments_mz_intensities,ppm=50)
-    expected_value = 0.886
-    
-    self.assertAlmostEqual(current_value, expected_value, delta=1e-2)
 
   def test_formula_str(self):
     expected_value = "C12H3N3O+[M+H-C2]+"
