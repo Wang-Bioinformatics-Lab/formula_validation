@@ -29,15 +29,8 @@ This Python module provides a `Formula` class that allows you to work with chemi
 To use this module, you'll need Python 3.x and the required dependencies. You can install the dependencies using pip:
 
 ```bash
-pip install rdkit urllib3 rpy2
-```
-You should have R installed with the package devtools and 
-```R
-install.packages("devtools")
-devtools::install_github("mjhelf/MassTools")
+pip install rdkit urllib3
 
-library(MassTools)
-```
 ## Usage
 
 ### Creating Formula Objects
