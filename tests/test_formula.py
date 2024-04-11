@@ -115,6 +115,46 @@ class TestFormula(unittest.TestCase):
     elements_expected = {Element_type.H: 38, Element_type.C: 24, Element_type.N: 1, Element_type.O: 5, Element_type.Cl: 1}
     self.assertEqual(my_formula.get_elements(),elements_expected)
 
+  def test_formula_from_inchi_1(self):
+    inchi = 'InChI=1S/C48H72N10O12/c1-25(2)22-36-45(66)57-39(47(69)70)29(6)41(62)54-34(16-13-21-51-48(49)50)44(65)53-33(18-17-26(3)23-27(4)37(59)24-32-14-11-10-12-15-32)28(5)40(61)55-35(46(67)68)19-20-38(60)58(9)31(8)43(64)52-30(7)42(63)56-36/h10-12,14-15,17-18,23,25,27-30,33-37,39,59H,8,13,16,19-22,24H2,1-7,9H3,(H,52,64)(H,53,65)(H,54,62)(H,55,61)(H,56,63)(H,57,66)(H,67,68)(H,69,70)(H4,49,50,51)/b18-17+,26-23+'
+    adduct = '[M+C2H2O-H]-'
+    my_formula = Formula.formula_from_inchi(inchi, adduct)
+    elements_expected = {Element_type.H: 72, Element_type.C: 48, Element_type.N: 10, Element_type.O: 12}
+    self.assertEqual(my_formula.get_elements(),elements_expected)
+
+  def test_formula_from_inchi_2(self):
+    inchi = 'InChI=1S/C45H73N5O10S3/c1-14-17-24(6)34(52)26(8)37-25(7)30(58-13)18-31-46-29(19-61-31)39-49-45(12,21-62-39)43-50-44(11,20-63-43)42(57)48-32(22(4)15-2)35(53)27(9)40(55)59-36(23(5)16-3)38(54)47-33(28(10)51)41(56)60-37/h19,22-28,30,32-37,51-53H,14-18,20-21H2,1-13H3,(H,47,54)(H,48,57)/t22-,23-,24+,25-,26-,27+,28+,30-,32-,33-,34-,35-,36-,37?,44+,45?/m0/s1'
+    adduct = '[M+C2H2O-H]-'
+    my_formula = Formula.formula_from_inchi(inchi, adduct)
+    elements_expected = {Element_type.H: 73, Element_type.C: 45, Element_type.N: 5, Element_type.O: 10, Element_type.S: 3}
+    self.assertEqual(my_formula.get_elements(),elements_expected)
+
+  def test_formula_from_inchi_3(self):
+    inchi = 'InChI=1S/C24H38ClNO5/c1-3-4-5-6-8-11-19(30-2)12-9-7-10-13-22(29)26-17-18(16-25)24-21(28)15-14-20(27)23(24)31-24/h7,9,16,19-20,23,27H,3-6,8,10-15,17H2,1-2H3,(H,26,29)/b9-7+,18-16-/t19-,20-,23-,24+/m0/s1'
+    adduct = '[M+C2H2O-H]-'
+    my_formula = Formula.formula_from_inchi(inchi, adduct)
+    elements_expected = {Element_type.H: 38, Element_type.C: 24, Element_type.N: 1, Element_type.O: 5, Element_type.Cl: 1}
+    self.assertEqual(my_formula.get_elements(),elements_expected)
+
+  def test_formula_from_inchi_4(self):
+    inchi = 'InChI=1S/C3H10N2/c4-2-1-3-5/h1-5H2'
+    my_formula = Formula.formula_from_inchi(inchi)
+    elements_expected = {Element_type.H: 10, Element_type.C: 3, Element_type.N: 2}
+    self.assertEqual(my_formula.get_elements(),elements_expected)
+  
+  def test_formula_from_inchi_with_a_charge(self):
+    inchi = 'InChI=1S/C5H14NO/c1-6(2,3)4-5-7/h7H,4-5H2,1-3H3/q+1'
+    my_formula = Formula.formula_from_inchi(inchi)
+    elements_expected = {Element_type.H: 14, Element_type.C: 5, Element_type.N: 1, Element_type.O: 1}
+    self.assertEqual(my_formula.get_elements(),elements_expected)
+
+  def test_formula_from_inchi_with_a_proton(self):
+    inchi = 'InChI=1S/C26H24O14/c1-35-14-3-9(4-15(36-2)19(14)30)23-24(40-26-22(33)21(32)20(31)16(8-28)39-26)17-11(7-27)25(34)38-13-6-10(29)5-12(37-23)18(13)17/h3-7,16,20-22,26,28,30-34H,8H2,1-2H3/p+1'
+    my_formula = Formula.formula_from_inchi(inchi)
+    elements_expected = {Element_type.H: 14, Element_type.C: 5, Element_type.N: 1, Element_type.O: 1}
+    self.assertEqual(my_formula.get_elements(),elements_expected)
+    
+  
   def test_monoisotopic_mass(self):
     smiles_1 = 'CCCCCCC[C@@H](C/C=C/CCC(=O)NC/C(=C/Cl)/[C@@]12[C@@H](O1)[C@H](CCC2=O)O)OC'
     adduct = 'None'

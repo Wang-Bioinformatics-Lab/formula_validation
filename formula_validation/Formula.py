@@ -342,7 +342,7 @@ class Formula:
         raise IncorrectFormula("other should be a formula and is a " + str(type(Formula)))
     
   @staticmethod
-  def formula_from_str_hill(formula_str: str, adduct: str, metadata: dict=None) -> 'Formula':
+  def formula_from_str_hill(formula_str: str, adduct: str=None, metadata: dict=None) -> 'Formula':
     """
       Static method to create a Formula object from a chemical formula string in Hill notation.
 
@@ -389,7 +389,7 @@ class Formula:
     return Formula(elements, adduct, charge, charge_type, metadata=metadata)
   
   @staticmethod
-  def formula_from_str(formula_str: str, adduct: str, no_api: bool=False, metadata: bool=None) -> 'Formula':
+  def formula_from_str(formula_str: str, adduct: str=None, no_api: bool=False, metadata: bool=None) -> 'Formula':
     """
       Static method to create a Formula object from a chemical formula string.
 
@@ -432,7 +432,7 @@ class Formula:
       return None
     
   @staticmethod
-  def formula_from_smiles(smiles: str, adduct: str, no_api: bool=False, metadata: Dict=None) -> 'Formula':
+  def formula_from_smiles(smiles: str, adduct: str=None, no_api: bool=False, metadata: Dict=None) -> 'Formula':
     """
       Static method to create a Formula object from a SMILES (Simplified Molecular Input Line Entry System) string.
 
@@ -462,7 +462,7 @@ class Formula:
     return Formula.formula_from_str(formula, adduct, no_api, metadata=metadata)
     
   @staticmethod
-  def formula_from_inchi(inchi: str, adduct: str, no_api:bool=False, metadata: Dict=None) -> 'Formula':
+  def formula_from_inchi(inchi: str, adduct: str=None, no_api:bool=False, metadata: Dict=None) -> 'Formula':
     """
       Static method to create a Formula object from an InChI (International Chemical Identifier) string.
 
@@ -683,6 +683,7 @@ class Formula:
         the absolute value of the ppm calculated
     """
     return (reference_monoisotopic_mass / 1000000.0) * ppm
+  
   
 
 if __name__ == '__main__':
