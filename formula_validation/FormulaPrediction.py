@@ -36,23 +36,35 @@ import rpy2.robjects as robjects
 from rpy2.robjects.packages import importr
 
 robjects.r('''
-    install.packages("devtools")
-    devtools::install_github("mjhelf/MassTools")
+    install.packages("remotes")
+    remotes::install_github("mjhelf/MassTools")
+    remotes::install_github("mjhelf/MassTools")
 
     library(MassTools)
 ''')
 
-mz = 200
-charge = 1
-ppm = 20
-min_carbons = 8
-max_carbons = 9
-min_hydrogens = 4
-max_hydrogens = 9
+# C < 25
+# O < 7
+# H < 37
+# N < 2 
+# S < 2
+# 
+
+mz = 352.22537
+charge = 0
+ppm = 10
+min_carbons = 1
+max_carbons = 24
+min_hydrogens = 1
+max_hydrogens = 36
+min_oxygen = 1
+max_oxygen = 6
+max_sulfur = 1
+max_nitrogen = 1
 top = 3
 
-min_elements = f"C{min_carbons}H{min_hydrogens}"
-max_elements = f"C{max_carbons}H{max_hydrogens}"
+min_elements = f"C{min_carbons}H{min_hydrogens}O{min_oxygen}"
+max_elements = f"C{max_carbons}H{max_hydrogens}O{max_oxygen}N{max_nitrogen}S{max_sulfur}"
 
 elements_list=["C", "H", "N", "O", "S"]
 # Convert the filter strings to R format
@@ -87,3 +99,5 @@ robjects.r('ppm <- {}'.format(ppm))
 robjects.r('top <- {}'.format(top))
 robjects.r('mfs <- calcMF(mz = mz, z = z, ppm = ppm, top = top, elements = elements, Filters = {})'.format(filter_r_code))
 mfs = robjects.r('mfs')
+
+print(mfs)
