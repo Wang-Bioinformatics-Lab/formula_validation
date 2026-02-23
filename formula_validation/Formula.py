@@ -410,8 +410,6 @@ class Formula:
       simple_formula = Formula.formula_from_str_hill(formula_str, adduct, metadata)
       return simple_formula
     except Exception as e:
-      # If the formula could not be processed directly, then it is processed by chemcalc
-      print(e)
       pass
 
     if not no_api:

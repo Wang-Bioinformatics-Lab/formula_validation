@@ -151,7 +151,7 @@ class TestFormula(unittest.TestCase):
   def test_formula_from_inchi_with_a_proton(self):
     inchi = 'InChI=1S/C26H24O14/c1-35-14-3-9(4-15(36-2)19(14)30)23-24(40-26-22(33)21(32)20(31)16(8-28)39-26)17-11(7-27)25(34)38-13-6-10(29)5-12(37-23)18(13)17/h3-7,16,20-22,26,28,30-34H,8H2,1-2H3/p+1'
     my_formula = Formula.formula_from_inchi(inchi)
-    elements_expected = {Element_type.H: 14, Element_type.C: 5, Element_type.N: 1, Element_type.O: 1}
+    elements_expected = {Element_type.H: 25, Element_type.C: 26, Element_type.O: 14}
     self.assertEqual(my_formula.get_elements(),elements_expected)
     
   
